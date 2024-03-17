@@ -1,5 +1,8 @@
 package internal
 
+import "time"
+
 type Store interface {
-	FindCertificatesThatAreOutdated() []string
+	FindCertificatesThatAreOutdated() ([]Item, error)
+	FindCertificatesOlderThanDate(time.Time) ([]Item, error)
 }

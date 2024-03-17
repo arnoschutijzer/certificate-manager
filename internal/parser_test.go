@@ -16,7 +16,7 @@ func TestParsesASingleCertificate(t *testing.T) {
 
 	firstOfJune2024UTCAt1AM := time.Date(2024, time.June, 1, 0, 0, 0, 0, time.UTC)
 
-	assert.True(t, isValidCertificate(certificate, firstOfJune2024UTCAt1AM))
+	assert.True(t, IsValidCertificate(certificate, firstOfJune2024UTCAt1AM))
 }
 
 func TestFindsACertificate(t *testing.T) {
@@ -25,7 +25,7 @@ func TestFindsACertificate(t *testing.T) {
 		t.Fail()
 	}
 
-	certificates := getCertificatesFromString(string(certificate))
+	certificates := GetCertificatesFromString(string(certificate))
 
 	assert.Len(t, certificates, 1)
 }
@@ -39,13 +39,13 @@ func TestFindsMultipleCertificates(t *testing.T) {
 	certificates := certificate
 	certificates = append(certificates, certificate...)
 
-	foundCertificates := getCertificatesFromString(string(certificates))
+	foundCertificates := GetCertificatesFromString(string(certificates))
 
 	assert.Len(t, foundCertificates, 2)
 }
 
 func TestFindsNoCertificates(t *testing.T) {
-	certificates := getCertificatesFromString("")
+	certificates := GetCertificatesFromString("")
 
 	assert.Empty(t, certificates)
 }

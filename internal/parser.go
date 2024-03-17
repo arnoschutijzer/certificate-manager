@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func getCertificatesFromString(secret string) []string {
+func GetCertificatesFromString(secret string) []string {
 	certificates := []string{}
 	remainingSubstrings := secret
 
@@ -31,7 +31,7 @@ func getCertificatesFromString(secret string) []string {
 	return certificates
 }
 
-func isValidCertificate(certificate []byte, aDate time.Time) bool {
+func IsValidCertificate(certificate []byte, aDate time.Time) bool {
 	block, _ := pem.Decode(certificate)
 	cert, _ := x509.ParseCertificate(block.Bytes)
 

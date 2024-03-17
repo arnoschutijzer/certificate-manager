@@ -3,31 +3,90 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 const ONEPASSWORD_EXECUTABLE = "op"
 
 type OnePasswordStore struct{}
 
+const STRING_TYPE = "STRING"
+
 type Item struct {
 	Id     string  `json:"id"`
+	Title  string  `json:"title"`
+	Vault  Vault   `json:"vault"`
 	Fields []Field `json:"fields"`
 }
+
+type Vault struct {
+	Name string `json:"name"`
+}
+
+var errNoContentFieldFound = errors.New("no content field found")
+
+func (i *Item) findContentField() (*Field, error) {
+	for _, v := range i.Fields {
+		if v.Type == STRING_TYPE {
+			return &v, nil
+		}
+	}
+
+	return nil, errNoContentFieldFound
+}
+
 type Field struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
-func (s *OnePasswordStore) FindCertificatesThatAreOutdated() []string {
-	items, _ := getListOfItems()
+func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]Item, error) {
+	return s.FindCertificatesOlderThanDate(time.Now())
+}
 
-	for _, v := range items {
-		getItemDetails(v.Id)
+func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Item, error) {
+	items, err := getListOfItemsWithDetails()
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	itemsWithCertificates := []Item{}
+	for _, v := range items {
+		if doesItemContainAtLeastOneCertificate(v) {
+			itemsWithCertificates = append(itemsWithCertificates, v)
+		}
+	}
+
+	outdatedCertificates := []Item{}
+	for _, v := range itemsWithCertificates {
+		field, _ := v.findContentField()
+
+		if !IsValidCertificate([]byte(field.Value), date) {
+			outdatedCertificates = append(outdatedCertificates, v)
+		}
+	}
+
+	return outdatedCertificates, nil
+}
+
+func doesItemContainAtLeastOneCertificate(item Item) bool {
+	field, err := item.findContentField()
+
+	if errors.Is(err, errNoContentFieldFound) {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	certificates := GetCertificatesFromString(field.Value)
+
+	return len(certificates) > 0
 }
 
 func NewOnePasswordStore() *OnePasswordStore {
@@ -46,6 +105,23 @@ func execute[T any](cmd *exec.Cmd) (*T, error) {
 	json.Unmarshal(out.Bytes(), &response)
 
 	return &response, nil
+}
+
+func getListOfItemsWithDetails() ([]Item, error) {
+	items, _ := getListOfItems()
+
+	itemsWithDetails := make([]Item, len(items))
+	for _, v := range items {
+		item, err := getItemDetails(v.Id)
+
+		itemsWithDetails = append(itemsWithDetails, item)
+
+		if err != nil {
+			return []Item{}, err
+		}
+	}
+
+	return itemsWithDetails, nil
 }
 
 func getListOfItems() ([]Item, error) {
