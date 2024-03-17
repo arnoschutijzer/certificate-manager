@@ -10,11 +10,11 @@ import (
 	"time"
 )
 
-const ONEPASSWORD_EXECUTABLE = "op"
-
-type OnePasswordStore struct{}
-
-const STRING_TYPE = "STRING"
+const (
+	ONEPASSWORD_EXECUTABLE = "op"
+	NOTES_PURPOSE          = "NOTES"
+	STRING_TYPE            = "STRING"
+)
 
 type Item struct {
 	Id     string  `json:"id"`
@@ -26,7 +26,7 @@ var errNoContentFieldFound = errors.New("no content field found")
 
 func (i *Item) findContentField() (*Field, error) {
 	for _, v := range i.Fields {
-		if v.Type == STRING_TYPE {
+		if v.Type == STRING_TYPE && v.Purpose == NOTES_PURPOSE {
 			return &v, nil
 		}
 	}
@@ -35,9 +35,12 @@ func (i *Item) findContentField() (*Field, error) {
 }
 
 type Field struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type    string `json:"type"`
+	Purpose string `json:"purpose"`
+	Value   string `json:"value"`
 }
+
+type OnePasswordStore struct{}
 
 func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]Certificate, error) {
 	return s.FindCertificatesOlderThanDate(time.Now())
@@ -84,7 +87,7 @@ func doesItemContainAtLeastOneCertificate(item Item) bool {
 	return DoesSecretContainAnyCertificate(field.Value)
 }
 
-func NewOnePasswordStore() *OnePasswordStore {
+func NewOnePasswordStore() Store {
 	return &OnePasswordStore{}
 }
 
@@ -100,6 +103,16 @@ func execute[T any](cmd *exec.Cmd) (*T, error) {
 	json.Unmarshal(out.Bytes(), &response)
 
 	return &response, nil
+}
+
+func createCommand(commands ...[]string) *exec.Cmd {
+	allCommands := []string{}
+
+	for _, v := range commands {
+		allCommands = append(allCommands, v...)
+	}
+
+	return exec.Command(ONEPASSWORD_EXECUTABLE, allCommands...)
 }
 
 func getListOfItemsWithDetails() ([]Item, error) {
@@ -152,16 +165,6 @@ func getItemDetails(id string) (Item, error) {
 
 func listItemDetailsCommand(id string) []string {
 	return []string{"item", "get", id}
-}
-
-func createCommand(commands ...[]string) *exec.Cmd {
-	allCommands := []string{}
-
-	for _, v := range commands {
-		allCommands = append(allCommands, v...)
-	}
-
-	return exec.Command(ONEPASSWORD_EXECUTABLE, allCommands...)
 }
 
 func withTags(tags ...string) []string {
