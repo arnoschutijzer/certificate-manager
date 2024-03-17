@@ -25,6 +25,6 @@ func GetThem(store internal.Store) {
 	}
 
 	for _, v := range certificates {
-		fmt.Printf("%s\n", v.Title)
+		fmt.Printf("%s\n", v.VaultName)
 	}
 }

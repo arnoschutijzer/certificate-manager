@@ -7,6 +7,36 @@ import (
 	"time"
 )
 
+type Certificate struct {
+	NotBefore time.Time
+	NotAfter  time.Time
+	Subject   string
+	VaultName string
+}
+
+func (c *Certificate) IsValid(date time.Time) bool {
+	notAfter := c.NotAfter
+	notBefore := c.NotBefore
+
+	return notBefore.Before(date) && notAfter.After(date)
+}
+
+func NewCertificate(certificate string, vaultName string) Certificate {
+	block, _ := pem.Decode([]byte(certificate))
+	cert, _ := x509.ParseCertificate(block.Bytes)
+
+	notAfter := cert.NotAfter
+	notBefore := cert.NotBefore
+	subject := cert.Subject.CommonName
+
+	return Certificate{
+		NotAfter:  notAfter,
+		NotBefore: notBefore,
+		Subject:   subject,
+		VaultName: vaultName,
+	}
+}
+
 func GetCertificatesFromString(secret string) []string {
 	certificates := []string{}
 	remainingSubstrings := secret
@@ -29,14 +59,4 @@ func GetCertificatesFromString(secret string) []string {
 	}
 
 	return certificates
-}
-
-func IsValidCertificate(certificate []byte, aDate time.Time) bool {
-	block, _ := pem.Decode(certificate)
-	cert, _ := x509.ParseCertificate(block.Bytes)
-
-	notAfter := cert.NotAfter
-	notBefore := cert.NotBefore
-
-	return notBefore.Before(aDate) && notAfter.After(aDate)
 }

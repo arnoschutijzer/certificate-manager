@@ -3,6 +3,6 @@ package internal
 import "time"
 
 type Store interface {
-	FindCertificatesThatAreOutdated() ([]Item, error)
-	FindCertificatesOlderThanDate(time.Time) ([]Item, error)
+	FindCertificatesThatAreOutdated() ([]Certificate, error)
+	FindCertificatesOlderThanDate(time.Time) ([]Certificate, error)
 }

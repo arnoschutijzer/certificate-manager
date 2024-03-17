@@ -22,10 +22,6 @@ type Item struct {
 	Fields []Field `json:"fields"`
 }
 
-type Vault struct {
-	Name string `json:"name"`
-}
-
 var errNoContentFieldFound = errors.New("no content field found")
 
 func (i *Item) findContentField() (*Field, error) {
@@ -38,16 +34,20 @@ func (i *Item) findContentField() (*Field, error) {
 	return nil, errNoContentFieldFound
 }
 
+type Vault struct {
+	Name string `json:"name"`
+}
+
 type Field struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
-func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]Item, error) {
+func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]Certificate, error) {
 	return s.FindCertificatesOlderThanDate(time.Now())
 }
 
-func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Item, error) {
+func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Certificate, error) {
 	items, err := getListOfItemsWithDetails()
 
 	if err != nil {
@@ -61,12 +61,14 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Item
 		}
 	}
 
-	outdatedCertificates := []Item{}
+	outdatedCertificates := []Certificate{}
 	for _, v := range itemsWithCertificates {
 		field, _ := v.findContentField()
 
-		if !IsValidCertificate([]byte(field.Value), date) {
-			outdatedCertificates = append(outdatedCertificates, v)
+		certificate := NewCertificate(field.Value, v.Title)
+
+		if !certificate.IsValid(date) {
+			outdatedCertificates = append(outdatedCertificates, certificate)
 		}
 	}
 

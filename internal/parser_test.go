@@ -9,14 +9,15 @@ import (
 )
 
 func TestParsesASingleCertificate(t *testing.T) {
-	certificate, err := os.ReadFile("./test_fixtures/RootCA.pem")
+	certificateAsString, err := os.ReadFile("./test_fixtures/RootCA.pem")
 	if err != nil {
 		t.Fail()
 	}
 
 	firstOfJune2024UTCAt1AM := time.Date(2024, time.June, 1, 0, 0, 0, 0, time.UTC)
 
-	assert.True(t, IsValidCertificate(certificate, firstOfJune2024UTCAt1AM))
+	certificate := NewCertificate(string(certificateAsString))
+	assert.True(t, certificate.IsValid(firstOfJune2024UTCAt1AM))
 }
 
 func TestFindsACertificate(t *testing.T) {
