@@ -81,9 +81,7 @@ func doesItemContainAtLeastOneCertificate(item Item) bool {
 		return false
 	}
 
-	certificates := GetCertificatesFromString(field.Value, item.Title)
-
-	return len(certificates) > 0
+	return DoesSecretContainAnyCertificate(field.Value)
 }
 
 func NewOnePasswordStore() *OnePasswordStore {
