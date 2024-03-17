@@ -3,6 +3,7 @@ package internal
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -37,14 +38,15 @@ func NewCertificate(certificate string, vaultName string) Certificate {
 	}
 }
 
-func GetCertificatesFromString(secret string) []string {
-	certificates := []string{}
+func GetCertificatesFromString(secret string, vaultName string) []Certificate {
+	certificates := []Certificate{}
 	remainingSubstrings := secret
 
 	startCertificateTemplate := "-----BEGIN CERTIFICATE-----"
 	endCertificateTemplate := "-----END CERTIFICATE-----"
 
 	for true {
+		fmt.Println("parsing...")
 		indexOfBegin := strings.Index(remainingSubstrings, startCertificateTemplate)
 		indexOfEnd := strings.Index(remainingSubstrings, endCertificateTemplate)
 
@@ -54,7 +56,7 @@ func GetCertificatesFromString(secret string) []string {
 
 		certificate := remainingSubstrings[indexOfBegin : indexOfEnd+len(endCertificateTemplate)]
 
-		certificates = append(certificates, certificate)
+		certificates = append(certificates, NewCertificate(certificate, vaultName))
 		remainingSubstrings = remainingSubstrings[indexOfEnd+len(endCertificateTemplate):]
 	}
 

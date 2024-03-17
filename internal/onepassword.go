@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -64,11 +65,11 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Cert
 	outdatedCertificates := []Certificate{}
 	for _, v := range itemsWithCertificates {
 		field, _ := v.findContentField()
-
-		certificate := NewCertificate(field.Value, v.Title)
-
-		if !certificate.IsValid(date) {
-			outdatedCertificates = append(outdatedCertificates, certificate)
+		for _, certificate := range GetCertificatesFromString(field.Value, v.Title) {
+			if !certificate.IsValid(date) {
+				fmt.Printf("outdated certificates %s", v.Title)
+				outdatedCertificates = append(outdatedCertificates, certificate)
+			}
 		}
 	}
 
@@ -86,7 +87,7 @@ func doesItemContainAtLeastOneCertificate(item Item) bool {
 		return false
 	}
 
-	certificates := GetCertificatesFromString(field.Value)
+	certificates := GetCertificatesFromString(field.Value, item.Title)
 
 	return len(certificates) > 0
 }
@@ -127,7 +128,7 @@ func getListOfItemsWithDetails() ([]Item, error) {
 }
 
 func getListOfItems() ([]Item, error) {
-	cmd := createCommand(findListOfItems(), withTags("automation", "certificate"), withJsonFormat())
+	cmd := createCommand(listItemsCommand(), withCategories("SecureNote"), withJsonFormat())
 	items, err := execute[[]Item](cmd)
 
 	if err != nil {
@@ -137,20 +138,13 @@ func getListOfItems() ([]Item, error) {
 	return *items, nil
 }
 
-func findListOfItems() []string {
+func listItemsCommand() []string {
 	return []string{"item", "list"}
 }
 
-func withTags(tags ...string) []string {
-	commandTags := []string{
-		"--tags",
-	}
-	commandTags = append(commandTags, strings.Join(tags, ","))
-	return commandTags
-}
-
 func getItemDetails(id string) (Item, error) {
-	cmd := createCommand(findItemDetails(id), withJsonFormat())
+	fmt.Println("fetching details")
+	cmd := createCommand(listItemDetailsCommand(id), withJsonFormat())
 	item, err := execute[Item](cmd)
 	if err != nil {
 		return Item{}, err
@@ -159,7 +153,7 @@ func getItemDetails(id string) (Item, error) {
 	return *item, nil
 }
 
-func findItemDetails(id string) []string {
+func listItemDetailsCommand(id string) []string {
 	return []string{"item", "get", id}
 }
 
@@ -171,6 +165,23 @@ func createCommand(commands ...[]string) *exec.Cmd {
 	}
 
 	return exec.Command(ONEPASSWORD_EXECUTABLE, allCommands...)
+}
+
+func withTags(tags ...string) []string {
+	commandTags := []string{
+		"--tags",
+	}
+	commandTags = append(commandTags, strings.Join(tags, ","))
+	return commandTags
+}
+
+func withCategories(categories ...string) []string {
+	commandCategories := []string{
+		"--categories",
+	}
+
+	commandCategories = append(commandCategories, strings.Join(categories, ","))
+	return commandCategories
 }
 
 func withJsonFormat() []string {
