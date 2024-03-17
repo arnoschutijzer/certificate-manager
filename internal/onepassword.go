@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -106,9 +107,15 @@ func execute[T any](cmd *exec.Cmd) (*T, error) {
 func getListOfItemsWithDetails() ([]Item, error) {
 	items, _ := getListOfItems()
 
+	totalItems := len(items)
+
 	itemsWithDetails := make([]Item, len(items))
-	for _, v := range items {
+	for i, v := range items {
+		fmt.Printf("Retrieving item details %d/%d\n", i+1, totalItems)
+
+		before := time.Now()
 		item, err := getItemDetails(v.Id)
+		fmt.Printf("Retrieved item details in %f\n", time.Since(before).Seconds())
 
 		itemsWithDetails = append(itemsWithDetails, item)
 
