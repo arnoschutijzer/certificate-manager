@@ -45,6 +45,20 @@ func TestFindsMultipleCertificates(t *testing.T) {
 	assert.Len(t, foundCertificates, 2)
 }
 
+func TestFindsOneOddlyEscaped(t *testing.T) {
+	certificate, err := os.ReadFile("./test_fixtures/broken.pem")
+	if err != nil {
+		t.Fail()
+	}
+
+	certificates := certificate
+	certificates = append(certificates, certificate...)
+
+	foundCertificates := GetCertificatesFromString(string(certificates), "name")
+
+	assert.Len(t, foundCertificates, 2)
+}
+
 func TestFindsNoCertificates(t *testing.T) {
 	certificates := GetCertificatesFromString("", "name")
 

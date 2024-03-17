@@ -3,16 +3,15 @@ package internal
 import (
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"strings"
 	"time"
 )
 
 type Certificate struct {
-	NotBefore time.Time
-	NotAfter  time.Time
-	Subject   string
-	VaultName string
+	NotBefore  time.Time
+	NotAfter   time.Time
+	Subject    string
+	CustomName string
 }
 
 func (c *Certificate) IsValid(date time.Time) bool {
@@ -22,7 +21,7 @@ func (c *Certificate) IsValid(date time.Time) bool {
 	return notBefore.Before(date) && notAfter.After(date)
 }
 
-func NewCertificate(certificate string, vaultName string) Certificate {
+func NewCertificate(certificate string, customName string) Certificate {
 	block, _ := pem.Decode([]byte(certificate))
 	cert, _ := x509.ParseCertificate(block.Bytes)
 
@@ -31,14 +30,18 @@ func NewCertificate(certificate string, vaultName string) Certificate {
 	subject := cert.Subject.CommonName
 
 	return Certificate{
-		NotAfter:  notAfter,
-		NotBefore: notBefore,
-		Subject:   subject,
-		VaultName: vaultName,
+		NotAfter:   notAfter,
+		NotBefore:  notBefore,
+		Subject:    subject,
+		CustomName: customName,
 	}
 }
 
 func GetCertificatesFromString(secret string, vaultName string) []Certificate {
+	// Some secrets are oddly escaped due to them being
+	// copy-pasted to Intellij. These are saved with \n directly in the string.
+	secret = strings.ReplaceAll(secret, "\\n", "\n")
+
 	certificates := []Certificate{}
 	remainingSubstrings := secret
 
@@ -46,7 +49,6 @@ func GetCertificatesFromString(secret string, vaultName string) []Certificate {
 	endCertificateTemplate := "-----END CERTIFICATE-----"
 
 	for true {
-		fmt.Println("parsing...")
 		indexOfBegin := strings.Index(remainingSubstrings, startCertificateTemplate)
 		indexOfEnd := strings.Index(remainingSubstrings, endCertificateTemplate)
 

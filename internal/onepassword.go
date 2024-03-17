@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -19,7 +18,6 @@ const STRING_TYPE = "STRING"
 type Item struct {
 	Id     string  `json:"id"`
 	Title  string  `json:"title"`
-	Vault  Vault   `json:"vault"`
 	Fields []Field `json:"fields"`
 }
 
@@ -33,10 +31,6 @@ func (i *Item) findContentField() (*Field, error) {
 	}
 
 	return nil, errNoContentFieldFound
-}
-
-type Vault struct {
-	Name string `json:"name"`
 }
 
 type Field struct {
@@ -67,7 +61,6 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Cert
 		field, _ := v.findContentField()
 		for _, certificate := range GetCertificatesFromString(field.Value, v.Title) {
 			if !certificate.IsValid(date) {
-				fmt.Printf("outdated certificates %s", v.Title)
 				outdatedCertificates = append(outdatedCertificates, certificate)
 			}
 		}
@@ -143,7 +136,6 @@ func listItemsCommand() []string {
 }
 
 func getItemDetails(id string) (Item, error) {
-	fmt.Println("fetching details")
 	cmd := createCommand(listItemDetailsCommand(id), withJsonFormat())
 	item, err := execute[Item](cmd)
 	if err != nil {
