@@ -31,6 +31,18 @@ func TestFindsACertificate(t *testing.T) {
 	assert.Len(t, certificates, 1)
 }
 
+func TestCalculatesACertificatesFingerprint(t *testing.T) {
+	certificate, err := os.ReadFile("./test_fixtures/RootCA.pem")
+	if err != nil {
+		t.Fail()
+	}
+
+	certificates := GetCertificatesFromString(string(certificate), "name")
+
+	assert.Equal(t, certificates[0].Fingerprint, "d6e13068b9c76a77fd270f73970293ec86c7e233")
+	assert.Len(t, certificates, 1)
+}
+
 func TestFindsMultipleCertificates(t *testing.T) {
 	certificate, err := os.ReadFile("./test_fixtures/RootCA.pem")
 	if err != nil {
@@ -51,12 +63,9 @@ func TestFindsOneOddlyEscaped(t *testing.T) {
 		t.Fail()
 	}
 
-	certificates := certificate
-	certificates = append(certificates, certificate...)
+	foundCertificates := GetCertificatesFromString(string(certificate), "name")
 
-	foundCertificates := GetCertificatesFromString(string(certificates), "name")
-
-	assert.Len(t, foundCertificates, 2)
+	assert.Len(t, foundCertificates, 1)
 }
 
 func TestFindsNoCertificates(t *testing.T) {

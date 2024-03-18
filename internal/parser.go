@@ -1,17 +1,20 @@
 package internal
 
 import (
+	"crypto/sha1"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"strings"
 	"time"
 )
 
 type Certificate struct {
-	NotBefore  time.Time
-	NotAfter   time.Time
-	Subject    string
-	CustomName string
+	NotBefore   time.Time
+	NotAfter    time.Time
+	Subject     string
+	CustomName  string
+	Fingerprint string
 }
 
 func (c *Certificate) IsValid(date time.Time) bool {
@@ -29,11 +32,15 @@ func NewCertificate(certificate string, customName string) Certificate {
 	notBefore := cert.NotBefore
 	subject := cert.Subject.CommonName
 
+	hash := sha1.Sum(cert.Raw)
+	fingerprint := hex.EncodeToString(hash[:]) // 40 characters
+
 	return Certificate{
-		NotAfter:   notAfter,
-		NotBefore:  notBefore,
-		Subject:    subject,
-		CustomName: customName,
+		NotAfter:    notAfter,
+		NotBefore:   notBefore,
+		Subject:     subject,
+		CustomName:  customName,
+		Fingerprint: fingerprint,
 	}
 }
 
