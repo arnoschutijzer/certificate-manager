@@ -4,18 +4,17 @@ import (
 	"time"
 
 	i "github.com/algleymi/certificate-manager/internal"
-	"gorm.io/gorm"
 )
 
-type Store interface {
+type Cache interface {
 	SaveCertificate(certificate i.Certificate)
 	RetrieveCertificate(fingerprint string)
 }
 
 // Decouple from db schema
 type DatabaseCertificate struct {
-	gorm.Model
-	Fingerprint string
+	// gorm.Model
+	Fingerprint string `gorm:"primaryKey"`
 	CustomName  string
 	Subject     string
 	NotBefore   time.Time
