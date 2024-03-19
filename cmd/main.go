@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/algleymi/certificate-manager/internal"
+	vaults "github.com/algleymi/certificate-manager/internal/vaults"
 )
 
 func main() {
-	store := internal.NewOnePasswordStore()
+	store := vaults.NewOnePasswordStore()
 
 	firstOfJune2024UTCAt1AM := time.Date(2030, time.June, 1, 0, 0, 0, 0, time.UTC)
 	certificates, err := store.FindCertificatesOlderThanDate(firstOfJune2024UTCAt1AM)

@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/algleymi/certificate-manager/internal"
 )
 
 const (
@@ -42,11 +44,11 @@ type Field struct {
 
 type OnePasswordStore struct{}
 
-func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]Certificate, error) {
+func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]internal.Certificate, error) {
 	return s.FindCertificatesOlderThanDate(time.Now())
 }
 
-func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Certificate, error) {
+func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]internal.Certificate, error) {
 	items, err := getListOfItemsWithDetails()
 
 	if err != nil {
@@ -60,10 +62,10 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]Cert
 		}
 	}
 
-	outdatedCertificates := []Certificate{}
+	outdatedCertificates := []internal.Certificate{}
 	for _, v := range itemsWithCertificates {
 		field, _ := v.findContentField()
-		for _, certificate := range GetCertificatesFromString(field.Value, v.Title) {
+		for _, certificate := range internal.GetCertificatesFromString(field.Value, v.Title) {
 			if !certificate.IsValid(date) {
 				outdatedCertificates = append(outdatedCertificates, certificate)
 			}
@@ -84,7 +86,7 @@ func doesItemContainAtLeastOneCertificate(item Item) bool {
 		return false
 	}
 
-	return DoesSecretContainAnyCertificate(field.Value)
+	return internal.DoesSecretContainAnyCertificate(field.Value)
 }
 
 func NewOnePasswordStore() Vault {
