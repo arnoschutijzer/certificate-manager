@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/algleymi/certificate-manager/internal"
 	"github.com/algleymi/certificate-manager/internal/caches"
@@ -16,7 +17,7 @@ func main() {
 
 	certificateAsString, err := os.ReadFile("./internal/test_fixtures/RootCA.pem")
 	certificate := internal.NewCertificate(string(certificateAsString), "aName")
-	cache.SaveCertificate(certificate)
+	cache.SaveCertificate(certificate, time.Now())
 
 	defer cache.Cleanup()
 }

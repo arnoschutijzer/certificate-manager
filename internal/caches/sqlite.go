@@ -1,6 +1,8 @@
 package caches
 
 import (
+	"time"
+
 	"github.com/algleymi/certificate-manager/internal"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -24,8 +26,8 @@ func NewSqliteCache() (*SqliteCache, error) {
 	}, nil
 }
 
-func (s *SqliteCache) SaveCertificate(certificate internal.Certificate) error {
-	dbCertificate := ToDatabaseCertificate(certificate)
+func (s *SqliteCache) SaveCertificate(certificate internal.Certificate, updatedAt time.Time) error {
+	dbCertificate := ToDatabaseCertificate(certificate, updatedAt)
 	result := s.db.Create(&dbCertificate)
 	return result.Error
 }

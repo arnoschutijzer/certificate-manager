@@ -14,20 +14,21 @@ type Cache interface {
 
 // Decouple from db schema
 type DatabaseCertificate struct {
-	// gorm.Model
 	Fingerprint string `gorm:"primaryKey"`
 	CustomName  string
 	Subject     string
 	NotBefore   time.Time
 	NotAfter    time.Time
+	UpdatedAt   time.Time
 }
 
-func ToDatabaseCertificate(certificate i.Certificate) DatabaseCertificate {
+func ToDatabaseCertificate(certificate i.Certificate, updatedAt time.Time) DatabaseCertificate {
 	return DatabaseCertificate{
 		Fingerprint: certificate.Fingerprint,
 		CustomName:  certificate.CustomName,
 		Subject:     certificate.Subject,
 		NotBefore:   certificate.NotBefore,
 		NotAfter:    certificate.NotAfter,
+		UpdatedAt:   updatedAt,
 	}
 }
