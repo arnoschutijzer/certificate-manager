@@ -24,19 +24,21 @@ func NewSqliteCache() (*SqliteCache, error) {
 	}, nil
 }
 
-// SaveCertificate(certificate i.Certificate)
-// RetrieveCertificate(fingerprint string)
-
 func (s *SqliteCache) SaveCertificate(certificate internal.Certificate) error {
 	dbCertificate := ToDatabaseCertificate(certificate)
-
-	tx := s.db.Begin()
 	result := s.db.Create(&dbCertificate)
-	tx.Commit()
-
 	return result.Error
 }
 
 func (s *SqliteCache) RetrieveCertificate(fingerprint string) {
 
+}
+
+func (s *SqliteCache) Cleanup() error {
+	sqlDb, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return sqlDb.Close()
 }

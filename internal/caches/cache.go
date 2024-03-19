@@ -9,6 +9,7 @@ import (
 type Cache interface {
 	SaveCertificate(certificate i.Certificate)
 	RetrieveCertificate(fingerprint string)
+	Cleanup()
 }
 
 // Decouple from db schema

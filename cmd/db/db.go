@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	db, err := caches.NewSqliteCache()
+	cache, err := caches.NewSqliteCache()
 
 	if err != nil {
 		panic(err)
@@ -16,5 +16,7 @@ func main() {
 
 	certificateAsString, err := os.ReadFile("./internal/test_fixtures/RootCA.pem")
 	certificate := internal.NewCertificate(string(certificateAsString), "aName")
-	db.SaveCertificate(certificate)
+	cache.SaveCertificate(certificate)
+
+	defer cache.Cleanup()
 }
