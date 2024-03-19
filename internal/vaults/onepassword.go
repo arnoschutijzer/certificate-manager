@@ -19,14 +19,19 @@ const (
 )
 
 type Item struct {
-	Id     string  `json:"id"`
-	Title  string  `json:"title"`
+	Id        string    `json:"id"`
+	Title     string    `json:"title"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type ItemWithFields struct {
+	Item
 	Fields []Field `json:"fields"`
 }
 
 var errNoContentFieldFound = errors.New("no content field found")
 
-func (i *Item) findContentField() (*Field, error) {
+func (i *ItemWithFields) findContentField() (*Field, error) {
 	for _, v := range i.Fields {
 		if v.Type == STRING_TYPE && v.Purpose == NOTES_PURPOSE {
 			return &v, nil
@@ -55,7 +60,7 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 		return nil, err
 	}
 
-	itemsWithCertificates := []Item{}
+	itemsWithCertificates := []ItemWithFields{}
 	for _, v := range items {
 		if doesItemContainAtLeastOneCertificate(v) {
 			itemsWithCertificates = append(itemsWithCertificates, v)
@@ -75,7 +80,7 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 	return outdatedCertificates, nil
 }
 
-func doesItemContainAtLeastOneCertificate(item Item) bool {
+func doesItemContainAtLeastOneCertificate(item ItemWithFields) bool {
 	field, err := item.findContentField()
 
 	if errors.Is(err, errNoContentFieldFound) {
@@ -117,12 +122,12 @@ func createCommand(commands ...[]string) *exec.Cmd {
 	return exec.Command(ONEPASSWORD_EXECUTABLE, allCommands...)
 }
 
-func getListOfItemsWithDetails() ([]Item, error) {
+func getListOfItemsWithDetails() ([]ItemWithFields, error) {
 	items, _ := getListOfItems()
 
 	totalItems := len(items)
 
-	itemsWithDetails := make([]Item, len(items))
+	itemsWithDetails := make([]ItemWithFields, len(items))
 	for i, v := range items {
 		fmt.Printf("Retrieving item details %d/%d\n", i+1, totalItems)
 
@@ -133,7 +138,7 @@ func getListOfItemsWithDetails() ([]Item, error) {
 		itemsWithDetails = append(itemsWithDetails, item)
 
 		if err != nil {
-			return []Item{}, err
+			return []ItemWithFields{}, err
 		}
 	}
 
@@ -155,11 +160,11 @@ func listItemsCommand() []string {
 	return []string{"item", "list"}
 }
 
-func getItemDetails(id string) (Item, error) {
+func getItemDetails(id string) (ItemWithFields, error) {
 	cmd := createCommand(listItemDetailsCommand(id), withJsonFormat())
-	item, err := execute[Item](cmd)
+	item, err := execute[ItemWithFields](cmd)
 	if err != nil {
-		return Item{}, err
+		return ItemWithFields{}, err
 	}
 
 	return *item, nil
