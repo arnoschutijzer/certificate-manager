@@ -7,9 +7,9 @@ import (
 )
 
 type Cache interface {
-	SaveCertificate(certificate i.Certificate)
+	SaveCertificate(certificate i.Certificate, updatedAt time.Time) error
 	RetrieveCertificate(fingerprint string)
-	Cleanup()
+	Cleanup() error
 }
 
 // Decouple from db schema
