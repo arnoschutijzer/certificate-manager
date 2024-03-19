@@ -2,7 +2,7 @@ package internal
 
 import "time"
 
-type Store interface {
+type Vault interface {
 	FindCertificatesThatAreOutdated() ([]Certificate, error)
 	FindCertificatesOlderThanDate(time.Time) ([]Certificate, error)
 }

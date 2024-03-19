@@ -87,7 +87,7 @@ func doesItemContainAtLeastOneCertificate(item Item) bool {
 	return DoesSecretContainAnyCertificate(field.Value)
 }
 
-func NewOnePasswordStore() Store {
+func NewOnePasswordStore() Vault {
 	return &OnePasswordStore{}
 }
 
