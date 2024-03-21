@@ -3,7 +3,6 @@ package caches
 import (
 	"time"
 
-	"github.com/algleymi/certificate-manager/internal"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -15,7 +14,8 @@ type SqliteCache struct {
 func NewSqliteCache() (*SqliteCache, error) {
 	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 
-	db.AutoMigrate(&DatabaseCertificate{})
+	db.AutoMigrate(&VaultItem{})
+	db.AutoMigrate(&Certificate{})
 
 	if err != nil {
 		return nil, err
@@ -26,13 +26,12 @@ func NewSqliteCache() (*SqliteCache, error) {
 	}, nil
 }
 
-func (s *SqliteCache) SaveCertificate(certificate internal.Certificate, updatedAt time.Time) error {
-	dbCertificate := ToDatabaseCertificate(certificate, updatedAt)
-	result := s.db.Create(&dbCertificate)
+func (s *SqliteCache) SaveVaultItem(vaultItem *VaultItem, updatedAt time.Time) error {
+	result := s.db.Create(&vaultItem)
 	return result.Error
 }
 
-func (s *SqliteCache) RetrieveCertificate(fingerprint string) {
+func (s *SqliteCache) RetrieveVaultItem(fingerprint string) {
 
 }
 

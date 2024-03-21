@@ -17,7 +17,14 @@ func main() {
 
 	certificateAsString, err := os.ReadFile("./internal/test_fixtures/RootCA.pem")
 	certificate := internal.NewCertificate(string(certificateAsString), "aName")
-	cache.SaveCertificate(certificate, time.Now())
+	vaultItem := &caches.VaultItem{
+		Id:           "an-id",
+		Title:        "A VaultItem",
+		UpdatedAt:    time.Now(),
+		Certificates: []caches.Certificate{caches.ToDbCertificate("an-id", certificate)},
+	}
+
+	cache.SaveVaultItem(vaultItem, time.Now())
 
 	defer cache.Cleanup()
 }

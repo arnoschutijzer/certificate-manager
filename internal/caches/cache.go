@@ -3,32 +3,39 @@ package caches
 import (
 	"time"
 
-	i "github.com/algleymi/certificate-manager/internal"
+	"github.com/algleymi/certificate-manager/internal"
 )
 
 type Cache interface {
-	SaveCertificate(certificate i.Certificate, updatedAt time.Time) error
-	RetrieveCertificate(fingerprint string)
+	SaveVaultItem(vaultItem VaultItem, updatedAt time.Time) error
+	RetrieveVaultItem(id string)
 	Cleanup() error
 }
 
-// Decouple from db schema
-type DatabaseCertificate struct {
-	Fingerprint string `gorm:"primaryKey"`
-	CustomName  string
-	Subject     string
-	NotBefore   time.Time
-	NotAfter    time.Time
-	UpdatedAt   time.Time
+// Decouple vaults from db schema
+type VaultItem struct {
+	Id           string
+	Title        string
+	UpdatedAt    time.Time
+	Certificates []Certificate `gorm:"foreignKey:VaultItem"`
 }
 
-func ToDatabaseCertificate(certificate i.Certificate, updatedAt time.Time) DatabaseCertificate {
-	return DatabaseCertificate{
+type Certificate struct {
+	VaultItem   string
+	NotBefore   time.Time
+	NotAfter    time.Time
+	Subject     string
+	CustomName  string
+	Fingerprint string
+}
+
+func ToDbCertificate(id string, certificate internal.Certificate) Certificate {
+	return Certificate{
+		VaultItem:   id,
 		Fingerprint: certificate.Fingerprint,
-		CustomName:  certificate.CustomName,
 		Subject:     certificate.Subject,
-		NotBefore:   certificate.NotBefore,
 		NotAfter:    certificate.NotAfter,
-		UpdatedAt:   updatedAt,
+		NotBefore:   certificate.NotBefore,
+		CustomName:  certificate.CustomName,
 	}
 }
