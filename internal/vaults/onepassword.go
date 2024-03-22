@@ -90,10 +90,6 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 	return outdatedCertificates, nil
 }
 
-func (s *OnePasswordStore) saveCertificateToCache(items []ItemWithFields) {
-
-}
-
 func (s *OnePasswordStore) cacheCertificates(certificates []ItemWithFields) {
 	if s.cache == nil {
 		return
