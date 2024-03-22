@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/algleymi/certificate-manager/internal"
-	"gorm.io/gorm"
 )
 
 type Cache interface {
@@ -15,8 +14,7 @@ type Cache interface {
 
 // Decouple vaults from db schema
 type VaultItem struct {
-	gorm.Model
-	VaultId      string
+	VaultId      string `gorm:"primaryKey"`
 	Title        string
 	UpdatedAt    time.Time
 	Certificates []Certificate `gorm:"foreignKey:VaultItem"`
