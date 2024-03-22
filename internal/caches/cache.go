@@ -4,17 +4,19 @@ import (
 	"time"
 
 	"github.com/algleymi/certificate-manager/internal"
+	"gorm.io/gorm"
 )
 
 type Cache interface {
-	SaveVaultItem(vaultItem VaultItem, updatedAt time.Time) error
+	SaveVaultItem(vaultItem VaultItem) error
 	RetrieveVaultItem(id string)
 	Cleanup() error
 }
 
 // Decouple vaults from db schema
 type VaultItem struct {
-	Id           string
+	gorm.Model
+	VaultId      string
 	Title        string
 	UpdatedAt    time.Time
 	Certificates []Certificate `gorm:"foreignKey:VaultItem"`

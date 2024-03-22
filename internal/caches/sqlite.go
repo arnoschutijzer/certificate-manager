@@ -1,8 +1,6 @@
 package caches
 
 import (
-	"time"
-
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -10,6 +8,8 @@ import (
 type SqliteCache struct {
 	db *gorm.DB
 }
+
+var _ Cache = &SqliteCache{}
 
 func NewSqliteCache() (*SqliteCache, error) {
 	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
@@ -26,12 +26,12 @@ func NewSqliteCache() (*SqliteCache, error) {
 	}, nil
 }
 
-func (s *SqliteCache) SaveVaultItem(vaultItem *VaultItem, updatedAt time.Time) error {
+func (s *SqliteCache) SaveVaultItem(vaultItem VaultItem) error {
 	result := s.db.Create(&vaultItem)
 	return result.Error
 }
 
-func (s *SqliteCache) RetrieveVaultItem(fingerprint string) {
+func (s *SqliteCache) RetrieveVaultItem(id string) {
 
 }
 

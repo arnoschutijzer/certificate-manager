@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/algleymi/certificate-manager/internal"
+	"github.com/algleymi/certificate-manager/internal/caches"
 )
 
 const (
@@ -47,7 +48,13 @@ type Field struct {
 	Value   string `json:"value"`
 }
 
-type OnePasswordStore struct{}
+type OnePasswordStore struct {
+	cache caches.Cache
+}
+
+func NewOnePasswordStore(cache caches.Cache) Vault {
+	return &OnePasswordStore{cache: cache}
+}
 
 func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]internal.Certificate, error) {
 	return s.FindCertificatesOlderThanDate(time.Now())
@@ -67,6 +74,8 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 		}
 	}
 
+	s.cacheCertificates(itemsWithCertificates)
+
 	outdatedCertificates := []internal.Certificate{}
 	for _, v := range itemsWithCertificates {
 		field, _ := v.findContentField()
@@ -78,6 +87,38 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 	}
 
 	return outdatedCertificates, nil
+}
+
+func (s *OnePasswordStore) saveCertificateToCache(items []ItemWithFields) {
+
+}
+
+func (s *OnePasswordStore) cacheCertificates(certificates []ItemWithFields) {
+	if s.cache == nil {
+		return
+	}
+
+	for _, v := range certificates {
+		vaultItem := mapOnePasswordToInternal(v)
+		s.cache.SaveVaultItem(vaultItem)
+	}
+}
+
+func mapOnePasswordToInternal(item ItemWithFields) caches.VaultItem {
+	field, _ := item.findContentField()
+	certificates := internal.GetCertificatesFromString(field.Value, item.Title)
+
+	cacheCertificates := []caches.Certificate{}
+	for _, certificate := range certificates {
+		cacheCertificates = append(cacheCertificates, caches.ToDbCertificate(item.Id, certificate))
+	}
+
+	return caches.VaultItem{
+		VaultId:      item.Id,
+		Title:        item.Title,
+		UpdatedAt:    item.UpdatedAt,
+		Certificates: cacheCertificates,
+	}
 }
 
 func doesItemContainAtLeastOneCertificate(item ItemWithFields) bool {
@@ -92,10 +133,6 @@ func doesItemContainAtLeastOneCertificate(item ItemWithFields) bool {
 	}
 
 	return internal.DoesSecretContainAnyCertificate(field.Value)
-}
-
-func NewOnePasswordStore() Vault {
-	return &OnePasswordStore{}
 }
 
 func execute[T any](cmd *exec.Cmd) (*T, error) {
@@ -127,7 +164,7 @@ func getListOfItemsWithDetails() ([]ItemWithFields, error) {
 
 	totalItems := len(items)
 
-	itemsWithDetails := make([]ItemWithFields, len(items))
+	itemsWithDetails := []ItemWithFields{}
 	for i, v := range items {
 		fmt.Printf("Retrieving item details %d/%d\n", i+1, totalItems)
 
@@ -146,7 +183,12 @@ func getListOfItemsWithDetails() ([]ItemWithFields, error) {
 }
 
 func getListOfItems() ([]Item, error) {
-	cmd := createCommand(listItemsCommand(), withCategories("SecureNote"), withJsonFormat())
+	cmd := createCommand(
+		listItemsCommand(),
+		withTags("certificate"),
+		withCategories("SecureNote"),
+		withJsonFormat(),
+	)
 	items, err := execute[[]Item](cmd)
 
 	if err != nil {

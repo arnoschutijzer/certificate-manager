@@ -2,13 +2,31 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
+	"github.com/algleymi/certificate-manager/internal/caches"
 	vaults "github.com/algleymi/certificate-manager/internal/vaults"
 )
 
 func main() {
-	store := vaults.NewOnePasswordStore()
+	cache, err := caches.NewSqliteCache()
+
+	if err != nil {
+		panic(err)
+	}
+
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigc
+
+		cache.Cleanup()
+	}()
+
+	store := vaults.NewOnePasswordStore(cache)
 
 	firstOfJune2024UTCAt1AM := time.Date(2030, time.June, 1, 0, 0, 0, 0, time.UTC)
 	certificates, err := store.FindCertificatesOlderThanDate(firstOfJune2024UTCAt1AM)
