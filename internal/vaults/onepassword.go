@@ -62,7 +62,7 @@ func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]internal.Certifi
 }
 
 func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]internal.Certificate, error) {
-	items, err := getListOfItemsWithDetails()
+	items, err := s.getListOfItemsWithDetails()
 
 	if err != nil {
 		return nil, err
@@ -101,9 +101,7 @@ func (s *OnePasswordStore) cacheCertificates(certificates []ItemWithFields) {
 
 	for _, v := range certificates {
 		vaultItem := mapOnePasswordToInternal(v)
-		item, err := s.cache.RetrieveVaultItem(v.Id)
-
-		fmt.Println(item)
+		_, err := s.cache.RetrieveVaultItem(v.Id)
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			s.cache.SaveVaultItem(vaultItem)
@@ -169,7 +167,7 @@ func createCommand(commands ...[]string) *exec.Cmd {
 	return exec.Command(ONEPASSWORD_EXECUTABLE, allCommands...)
 }
 
-func getListOfItemsWithDetails() ([]ItemWithFields, error) {
+func (s *OnePasswordStore) getListOfItemsWithDetails() ([]ItemWithFields, error) {
 	items, _ := getListOfItems()
 
 	totalItems := len(items)
