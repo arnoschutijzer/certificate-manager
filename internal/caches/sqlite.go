@@ -31,8 +31,15 @@ func (s *SqliteCache) SaveVaultItem(vaultItem VaultItem) error {
 	return result.Error
 }
 
-func (s *SqliteCache) RetrieveVaultItem(id string) {
+func (s *SqliteCache) RetrieveVaultItem(id string) (VaultItem, error) {
+	var vaultItem VaultItem
+	result := s.db.Where(&VaultItem{VaultId: id}).First(&vaultItem)
+	return vaultItem, result.Error
+}
 
+func (s *SqliteCache) UpdateVaultItem(vaultItem VaultItem) error {
+	result := s.db.Save(&vaultItem)
+	return result.Error
 }
 
 func (s *SqliteCache) Cleanup() error {

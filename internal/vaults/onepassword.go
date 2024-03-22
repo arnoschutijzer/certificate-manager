@@ -11,6 +11,7 @@ import (
 
 	"github.com/algleymi/certificate-manager/internal"
 	"github.com/algleymi/certificate-manager/internal/caches"
+	"gorm.io/gorm"
 )
 
 const (
@@ -100,7 +101,16 @@ func (s *OnePasswordStore) cacheCertificates(certificates []ItemWithFields) {
 
 	for _, v := range certificates {
 		vaultItem := mapOnePasswordToInternal(v)
-		s.cache.SaveVaultItem(vaultItem)
+		item, err := s.cache.RetrieveVaultItem(v.Id)
+
+		fmt.Println(item)
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.cache.SaveVaultItem(vaultItem)
+			continue
+		}
+
+		s.cache.UpdateVaultItem(vaultItem)
 	}
 }
 

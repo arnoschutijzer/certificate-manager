@@ -8,7 +8,8 @@ import (
 
 type Cache interface {
 	SaveVaultItem(vaultItem VaultItem) error
-	RetrieveVaultItem(id string)
+	RetrieveVaultItem(id string) (VaultItem, error)
+	UpdateVaultItem(vaultItem VaultItem) error
 	Cleanup() error
 }
 
@@ -26,7 +27,7 @@ type Certificate struct {
 	NotAfter    time.Time
 	Subject     string
 	CustomName  string
-	Fingerprint string
+	Fingerprint string `gorm:"primaryKey"`
 }
 
 func ToDbCertificate(id string, certificate internal.Certificate) Certificate {
