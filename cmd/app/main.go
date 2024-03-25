@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/algleymi/certificate-manager/internal"
 	"github.com/algleymi/certificate-manager/internal/caches"
+	"github.com/algleymi/certificate-manager/internal/domain"
 	vaults "github.com/algleymi/certificate-manager/internal/vaults"
 )
 
@@ -50,7 +50,7 @@ func main() {
 		return
 	}
 
-	slices.SortFunc(certificates, func(a, b internal.Certificate) int {
+	slices.SortFunc(certificates, func(a, b domain.Certificate) int {
 		return cmp.Compare(strings.ToLower(a.CustomName), strings.ToLower(b.CustomName))
 	})
 

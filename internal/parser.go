@@ -2,6 +2,8 @@ package internal
 
 import (
 	"strings"
+
+	"github.com/algleymi/certificate-manager/internal/domain"
 )
 
 const (
@@ -9,12 +11,12 @@ const (
 	END_CERTIFICATE_TEMPLATE   = "-----END CERTIFICATE-----"
 )
 
-func GetCertificatesFromString(secret string, vaultName string) []Certificate {
+func GetCertificatesFromString(secret string, vaultName string) []domain.Certificate {
 	// Some secrets are oddly escaped due to them being
 	// copy-pasted to Intellij. These are saved with \n directly in the string.
 	secret = strings.ReplaceAll(secret, "\\n", "\n")
 
-	certificates := []Certificate{}
+	certificates := []domain.Certificate{}
 	remainingSubstrings := secret
 
 	for true {
@@ -27,7 +29,7 @@ func GetCertificatesFromString(secret string, vaultName string) []Certificate {
 
 		certificate := remainingSubstrings[indexOfBegin : indexOfEnd+len(END_CERTIFICATE_TEMPLATE)]
 
-		certificates = append(certificates, NewCertificate(certificate, vaultName))
+		certificates = append(certificates, domain.NewCertificate(certificate, vaultName))
 		remainingSubstrings = remainingSubstrings[indexOfEnd+len(END_CERTIFICATE_TEMPLATE):]
 	}
 

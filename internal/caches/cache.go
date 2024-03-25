@@ -3,7 +3,7 @@ package caches
 import (
 	"time"
 
-	"github.com/algleymi/certificate-manager/internal"
+	"github.com/algleymi/certificate-manager/internal/domain"
 )
 
 type Cache interface {
@@ -29,7 +29,7 @@ type Certificate struct {
 	Fingerprint string `gorm:"primaryKey"`
 }
 
-func ToDbCertificate(id string, certificate internal.Certificate) Certificate {
+func ToDbCertificate(id string, certificate domain.Certificate) Certificate {
 	return Certificate{
 		SecretId:    id,
 		Fingerprint: certificate.Fingerprint,
@@ -40,8 +40,8 @@ func ToDbCertificate(id string, certificate internal.Certificate) Certificate {
 	}
 }
 
-func ToDomainCertificate(certificate Certificate) internal.Certificate {
-	return internal.Certificate{
+func ToDomainCertificate(certificate Certificate) domain.Certificate {
+	return domain.Certificate{
 		Fingerprint: certificate.Fingerprint,
 		Subject:     certificate.Subject,
 		NotAfter:    certificate.NotAfter,

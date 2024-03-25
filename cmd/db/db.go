@@ -4,8 +4,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/algleymi/certificate-manager/internal"
 	"github.com/algleymi/certificate-manager/internal/caches"
+	"github.com/algleymi/certificate-manager/internal/domain"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	}
 
 	certificateAsString, err := os.ReadFile("./internal/test_fixtures/RootCA.pem")
-	certificate := internal.NewCertificate(string(certificateAsString), "aName")
+	certificate := domain.NewCertificate(string(certificateAsString), "aName")
 	vaultItem := caches.Secret{
 		Id:           "an-id",
 		Title:        "A VaultItem",

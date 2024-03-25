@@ -10,6 +10,7 @@ import (
 
 	"github.com/algleymi/certificate-manager/internal"
 	"github.com/algleymi/certificate-manager/internal/caches"
+	"github.com/algleymi/certificate-manager/internal/domain"
 )
 
 const (
@@ -55,11 +56,11 @@ func NewOnePasswordStore(cache caches.Cache) Vault {
 	return &OnePasswordStore{cache: cache}
 }
 
-func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]internal.Certificate, error) {
+func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]domain.Certificate, error) {
 	return s.FindCertificatesOlderThanDate(time.Now())
 }
 
-func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]internal.Certificate, error) {
+func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]domain.Certificate, error) {
 	items, err := getListOfItems()
 	if err != nil {
 		return nil, err
@@ -67,13 +68,13 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 
 	vaultItems, err := internal.Map(items, s.retrieveMaybeCachedSecret)
 
-	certificates, _ := internal.FlatMap(vaultItems, func(secret caches.Secret) ([]internal.Certificate, error) {
-		return internal.Map(secret.Certificates, func(certificate caches.Certificate) (internal.Certificate, error) {
+	certificates, _ := internal.FlatMap(vaultItems, func(secret caches.Secret) ([]domain.Certificate, error) {
+		return internal.Map(secret.Certificates, func(certificate caches.Certificate) (domain.Certificate, error) {
 			return caches.ToDomainCertificate(certificate), nil
 		})
 	})
 
-	return internal.Filter(certificates, func(certificate internal.Certificate) bool {
+	return internal.Filter(certificates, func(certificate domain.Certificate) bool {
 		return !certificate.IsValid(date)
 	}), nil
 }

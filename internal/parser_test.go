@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/algleymi/certificate-manager/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +17,7 @@ func TestParsesASingleCertificate(t *testing.T) {
 
 	firstOfJune2024UTCAt1AM := time.Date(2024, time.June, 1, 0, 0, 0, 0, time.UTC)
 
-	certificate := NewCertificate(string(certificateAsString), "name")
+	certificate := domain.NewCertificate(string(certificateAsString), "name")
 	assert.True(t, certificate.IsValid(firstOfJune2024UTCAt1AM))
 }
 
