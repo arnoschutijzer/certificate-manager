@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/algleymi/certificate-manager/internal"
-	"github.com/algleymi/certificate-manager/internal/caches"
+	"github.com/algleymi/certificate-manager/internal/vaults/caches"
 )
 
 func main() {
@@ -17,11 +17,11 @@ func main() {
 
 	certificateAsString, err := os.ReadFile("./internal/test_fixtures/RootCA.pem")
 	certificate := internal.NewCertificate(string(certificateAsString), "aName")
-	vaultItem := caches.CachedItem{
-		VaultId:      "an-id",
+	vaultItem := caches.Secret{
+		Id:           "an-id",
 		Title:        "A VaultItem",
 		UpdatedAt:    time.Now(),
-		Certificates: []caches.CachedCertificate{caches.ToDbCertificate("an-id", certificate)},
+		Certificates: []caches.Certificate{caches.ToDbCertificate("an-id", certificate)},
 	}
 
 	cache.SaveVaultItem(vaultItem)

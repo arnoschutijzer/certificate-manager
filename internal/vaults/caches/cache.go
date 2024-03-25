@@ -7,21 +7,21 @@ import (
 )
 
 type Cache interface {
-	SaveVaultItem(vaultItem CachedItem) error
-	RetrieveVaultItem(id string) (CachedItem, error)
-	UpdateVaultItem(vaultItem CachedItem) error
+	SaveVaultItem(vaultItem Secret) error
+	RetrieveVaultItem(id string) (Secret, error)
+	UpdateVaultItem(vaultItem Secret) error
 	Cleanup() error
 }
 
 // Decouple vaults from db schema
-type CachedItem struct {
-	VaultId      string `gorm:"primaryKey"`
+type Secret struct {
+	Id           string `gorm:"primaryKey"`
 	Title        string
 	UpdatedAt    time.Time
-	Certificates []CachedCertificate `gorm:"foreignKey:VaultItem"`
+	Certificates []Certificate `gorm:"foreignKey:VaultItem"`
 }
 
-type CachedCertificate struct {
+type Certificate struct {
 	VaultItem   string
 	NotBefore   time.Time
 	NotAfter    time.Time
@@ -30,8 +30,8 @@ type CachedCertificate struct {
 	Fingerprint string `gorm:"primaryKey"`
 }
 
-func ToDbCertificate(id string, certificate internal.Certificate) CachedCertificate {
-	return CachedCertificate{
+func ToDbCertificate(id string, certificate internal.Certificate) Certificate {
+	return Certificate{
 		VaultItem:   id,
 		Fingerprint: certificate.Fingerprint,
 		Subject:     certificate.Subject,
@@ -41,7 +41,7 @@ func ToDbCertificate(id string, certificate internal.Certificate) CachedCertific
 	}
 }
 
-func ToDomainCertificate(certificate CachedCertificate) internal.Certificate {
+func ToDomainCertificate(certificate Certificate) internal.Certificate {
 	return internal.Certificate{
 		Fingerprint: certificate.Fingerprint,
 		Subject:     certificate.Subject,

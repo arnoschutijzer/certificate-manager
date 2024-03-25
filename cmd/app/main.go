@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/algleymi/certificate-manager/internal"
-	"github.com/algleymi/certificate-manager/internal/caches"
 	vaults "github.com/algleymi/certificate-manager/internal/vaults"
+	"github.com/algleymi/certificate-manager/internal/vaults/caches"
 )
 
 func main() {
