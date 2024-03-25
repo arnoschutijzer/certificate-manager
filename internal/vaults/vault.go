@@ -10,11 +10,3 @@ type Vault interface {
 	FindCertificatesThatAreOutdated() ([]internal.Certificate, error)
 	FindCertificatesOlderThanDate(time.Time) ([]internal.Certificate, error)
 }
-
-// Decouple vaults from db schema
-type VaultItem struct {
-	Id           string
-	Title        string
-	UpdatedAt    time.Time
-	Certificates []internal.Certificate
-}
