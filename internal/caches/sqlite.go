@@ -33,7 +33,7 @@ func (s *SqliteCache) SaveVaultItem(vaultItem VaultItem) error {
 
 func (s *SqliteCache) RetrieveVaultItem(id string) (VaultItem, error) {
 	var vaultItem VaultItem
-	result := s.db.Where(&VaultItem{VaultId: id}).First(&vaultItem)
+	result := s.db.Where(&VaultItem{VaultId: id}).Preload("Certificates").First(&vaultItem)
 	return vaultItem, result.Error
 }
 

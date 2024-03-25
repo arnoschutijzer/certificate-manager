@@ -61,6 +61,78 @@ func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]internal.Certifi
 	return s.FindCertificatesOlderThanDate(time.Now())
 }
 
+func (s *OnePasswordStore) FindCertificatesOlderThanDate2(date time.Time) ([]internal.Certificate, error) {
+	items, err := getListOfItems()
+	if err != nil {
+		return nil, err
+	}
+
+	predicate := func(item Item) (caches.VaultItem, error) {
+		cached, err := s.cache.RetrieveVaultItem(item.Id)
+
+		if err != nil {
+			vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
+
+			if err != nil {
+				return caches.VaultItem{}, err
+			}
+
+			return vaultItem, nil
+		}
+
+		if !item.UpdatedAt.After(cached.UpdatedAt) {
+			fmt.Println("returning cached")
+			return cached, nil
+		}
+
+		vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
+
+		if err != nil {
+			return caches.VaultItem{}, err
+		}
+
+		return vaultItem, nil
+	}
+
+	vaultItems, err := internal.Map(items, predicate)
+
+	filteredVaultItems := internal.Filter(vaultItems, func(item caches.VaultItem) bool {
+		fmt.Println(vaultItems)
+		outdatedCertificates := []internal.Certificate{}
+		for _, dbCertificate := range item.Certificates {
+			certificate := caches.ToDomainCertificate(dbCertificate)
+			if !certificate.IsValid(date) {
+				outdatedCertificates = append(outdatedCertificates, certificate)
+			}
+		}
+		return len(outdatedCertificates) > 0
+	})
+	certificates, _ := internal.FlatMap(filteredVaultItems, func(vaultItem caches.VaultItem) ([]internal.Certificate, error) {
+		return internal.Map(vaultItem.Certificates, func(certificate caches.Certificate) (internal.Certificate, error) {
+			return caches.ToDomainCertificate(certificate), nil
+		})
+	})
+
+	return certificates, nil
+}
+
+func (s *OnePasswordStore) retrieveVaultItemAndCache(id string) (caches.VaultItem, error) {
+	itemWithFields, err := getItemDetails(id)
+	if err != nil {
+		return caches.VaultItem{}, err
+	}
+
+	vaultItem := mapOnePasswordToInternal(itemWithFields)
+
+	if err != nil {
+		return caches.VaultItem{}, err
+	}
+
+	s.cache.SaveVaultItem(vaultItem)
+
+	return vaultItem, nil
+}
+
 func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]internal.Certificate, error) {
 	items, err := s.getListOfItemsWithDetails()
 

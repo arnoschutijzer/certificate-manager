@@ -40,3 +40,13 @@ func ToDbCertificate(id string, certificate internal.Certificate) Certificate {
 		CustomName:  certificate.CustomName,
 	}
 }
+
+func ToDomainCertificate(certificate Certificate) internal.Certificate {
+	return internal.Certificate{
+		Fingerprint: certificate.Fingerprint,
+		Subject:     certificate.Subject,
+		NotAfter:    certificate.NotAfter,
+		NotBefore:   certificate.NotBefore,
+		CustomName:  certificate.CustomName,
+	}
+}

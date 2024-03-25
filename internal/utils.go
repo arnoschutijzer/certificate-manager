@@ -22,3 +22,16 @@ func Map[A any, B any](array []A, predicate func(A) (B, error)) ([]B, error) {
 
 	return mapped, nil
 }
+
+func FlatMap[A any, B any](array []A, predicate func(A) ([]B, error)) ([]B, error) {
+	mapped := []B{}
+	for _, v := range array {
+		mappedValue, err := predicate(v)
+		if err != nil {
+			return nil, err
+		}
+		mapped = append(mapped, mappedValue...)
+	}
+
+	return mapped, nil
+}
