@@ -174,8 +174,8 @@ func createCommand(commands ...[]string) *exec.Cmd {
 func getListOfItems() ([]Item, error) {
 	cmd := createCommand(
 		listItemsCommand(),
-		withTags("certificate"),
-		withCategories("SecureNote"),
+		// withTags("certificate"),
+		// withCategories("SecureNote"),
 		withJsonFormat(),
 	)
 	items, err := execute[[]Item](cmd)
