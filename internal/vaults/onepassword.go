@@ -66,9 +66,9 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]doma
 		return nil, err
 	}
 
-	vaultItems, err := internal.Map(items, s.retrieveMaybeCachedSecret)
+	secrets, err := internal.Map(items, s.retrieveMaybeCachedSecret)
 
-	certificates, _ := internal.FlatMap(vaultItems, func(secret domain.Secret) ([]domain.Certificate, error) {
+	certificates, _ := internal.FlatMap(secrets, func(secret domain.Secret) ([]domain.Certificate, error) {
 		return internal.Map(secret.Certificates, func(certificate domain.Certificate) (domain.Certificate, error) {
 			return domain.Certificate{
 				Fingerprint: certificate.Fingerprint,
@@ -89,13 +89,13 @@ func (s *OnePasswordStore) retrieveMaybeCachedSecret(item Item) (domain.Secret, 
 	cached, err := s.cache.RetrieveSecret(item.Id)
 
 	if err != nil {
-		vaultItem, err := s.retrieveSecretAndCache(item.Id)
+		secret, err := s.retrieveSecretAndCache(item.Id)
 
 		if err != nil {
 			return domain.Secret{}, err
 		}
 
-		return vaultItem, nil
+		return secret, nil
 	}
 
 	if !item.UpdatedAt.After(cached.UpdatedAt) {
