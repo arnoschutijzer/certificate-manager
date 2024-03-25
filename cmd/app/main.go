@@ -29,7 +29,11 @@ func main() {
 	store := vaults.NewOnePasswordStore(cache)
 
 	firstOfJune2024UTCAt1AM := time.Date(2024, time.June, 1, 0, 0, 0, 0, time.UTC)
+
+	fmt.Println("Finding certificates...")
+	before := time.Now()
 	certificates, err := store.FindCertificatesOlderThanDate(firstOfJune2024UTCAt1AM)
+	fmt.Printf("Found certificates, took %f\n", time.Since(before).Seconds())
 
 	if err != nil {
 		panic(err)
