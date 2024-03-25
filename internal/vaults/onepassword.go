@@ -11,7 +11,6 @@ import (
 
 	"github.com/algleymi/certificate-manager/internal"
 	"github.com/algleymi/certificate-manager/internal/caches"
-	"gorm.io/gorm"
 )
 
 const (
@@ -61,7 +60,7 @@ func (s *OnePasswordStore) FindCertificatesThatAreOutdated() ([]internal.Certifi
 	return s.FindCertificatesOlderThanDate(time.Now())
 }
 
-func (s *OnePasswordStore) FindCertificatesOlderThanDate2(date time.Time) ([]internal.Certificate, error) {
+func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]internal.Certificate, error) {
 	items, err := getListOfItems()
 	if err != nil {
 		return nil, err
@@ -96,22 +95,15 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate2(date time.Time) ([]int
 
 	vaultItems, err := internal.Map(items, predicate)
 
-	filteredVaultItems := internal.Filter(vaultItems, func(item caches.VaultItem) bool {
-		fmt.Println(vaultItems)
-		outdatedCertificates := []internal.Certificate{}
-		for _, dbCertificate := range item.Certificates {
-			certificate := caches.ToDomainCertificate(dbCertificate)
-			if !certificate.IsValid(date) {
-				outdatedCertificates = append(outdatedCertificates, certificate)
-			}
-		}
-		return len(outdatedCertificates) > 0
-	})
-	certificates, _ := internal.FlatMap(filteredVaultItems, func(vaultItem caches.VaultItem) ([]internal.Certificate, error) {
+	certificates, _ := internal.FlatMap(vaultItems, func(vaultItem caches.VaultItem) ([]internal.Certificate, error) {
 		return internal.Map(vaultItem.Certificates, func(certificate caches.Certificate) (internal.Certificate, error) {
 			return caches.ToDomainCertificate(certificate), nil
 		})
 	})
+
+	return internal.Filter(certificates, func(certificate internal.Certificate) bool {
+		return !certificate.IsValid(date)
+	}), nil
 
 	return certificates, nil
 }
@@ -123,61 +115,9 @@ func (s *OnePasswordStore) retrieveVaultItemAndCache(id string) (caches.VaultIte
 	}
 
 	vaultItem := mapOnePasswordToInternal(itemWithFields)
-
-	if err != nil {
-		return caches.VaultItem{}, err
-	}
-
 	s.cache.SaveVaultItem(vaultItem)
 
 	return vaultItem, nil
-}
-
-func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]internal.Certificate, error) {
-	items, err := s.getListOfItemsWithDetails()
-
-	if err != nil {
-		return nil, err
-	}
-
-	itemsWithCertificates := []ItemWithFields{}
-	for _, v := range items {
-		if doesItemContainAtLeastOneCertificate(v) {
-			itemsWithCertificates = append(itemsWithCertificates, v)
-		}
-	}
-
-	s.cacheCertificates(itemsWithCertificates)
-
-	outdatedCertificates := []internal.Certificate{}
-	for _, v := range itemsWithCertificates {
-		field, _ := v.findContentField()
-		for _, certificate := range internal.GetCertificatesFromString(field.Value, v.Title) {
-			if !certificate.IsValid(date) {
-				outdatedCertificates = append(outdatedCertificates, certificate)
-			}
-		}
-	}
-
-	return outdatedCertificates, nil
-}
-
-func (s *OnePasswordStore) cacheCertificates(certificates []ItemWithFields) {
-	if s.cache == nil {
-		return
-	}
-
-	for _, v := range certificates {
-		vaultItem := mapOnePasswordToInternal(v)
-		_, err := s.cache.RetrieveVaultItem(v.Id)
-
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.cache.SaveVaultItem(vaultItem)
-			continue
-		}
-
-		s.cache.UpdateVaultItem(vaultItem)
-	}
 }
 
 func mapOnePasswordToInternal(item ItemWithFields) caches.VaultItem {
@@ -233,29 +173,6 @@ func createCommand(commands ...[]string) *exec.Cmd {
 	}
 
 	return exec.Command(ONEPASSWORD_EXECUTABLE, allCommands...)
-}
-
-func (s *OnePasswordStore) getListOfItemsWithDetails() ([]ItemWithFields, error) {
-	items, _ := getListOfItems()
-
-	totalItems := len(items)
-
-	itemsWithDetails := []ItemWithFields{}
-	for i, v := range items {
-		fmt.Printf("Retrieving item details %d/%d\n", i+1, totalItems)
-
-		before := time.Now()
-		item, err := getItemDetails(v.Id)
-		fmt.Printf("Retrieved item details in %f\n", time.Since(before).Seconds())
-
-		itemsWithDetails = append(itemsWithDetails, item)
-
-		if err != nil {
-			return []ItemWithFields{}, err
-		}
-	}
-
-	return itemsWithDetails, nil
 }
 
 func getListOfItems() ([]Item, error) {
