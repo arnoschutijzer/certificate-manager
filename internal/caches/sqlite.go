@@ -12,7 +12,7 @@ type SqliteCache struct {
 var _ Cache = &SqliteCache{}
 
 func NewSqliteCache() (*SqliteCache, error) {
-	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("cache.db"), &gorm.Config{})
 
 	db.AutoMigrate(&CachedItem{})
 	db.AutoMigrate(&CachedCertificate{})
