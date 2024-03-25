@@ -142,7 +142,7 @@ func (s *OnePasswordStore) retrieveSecretAndCache(id string) (domain.Secret, err
 
 func mapOnePasswordToInternal(item ItemWithFields) domain.Secret {
 	field, _ := item.findContentField()
-	certificates := internal.GetCertificatesFromString(field.Value, item.Title)
+	certificates := domain.GetCertificatesFromString(field.Value, item.Title)
 
 	cacheCertificates := []domain.Certificate{}
 	for _, certificate := range certificates {
