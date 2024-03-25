@@ -1,12 +1,16 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"os/signal"
+	"slices"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/algleymi/certificate-manager/internal"
 	"github.com/algleymi/certificate-manager/internal/caches"
 	vaults "github.com/algleymi/certificate-manager/internal/vaults"
 )
@@ -28,11 +32,11 @@ func main() {
 
 	store := vaults.NewOnePasswordStore(cache)
 
-	firstOfJune2024UTCAt1AM := time.Date(2024, time.June, 1, 0, 0, 0, 0, time.UTC)
+	nextMonth := time.Now().AddDate(0, 1, 0)
 
 	fmt.Println("Finding certificates...")
 	before := time.Now()
-	certificates, err := store.FindCertificatesOlderThanDate(firstOfJune2024UTCAt1AM)
+	certificates, err := store.FindCertificatesOlderThanDate(nextMonth)
 	fmt.Printf("Treated all certificates, took %f\n", time.Since(before).Seconds())
 
 	if err != nil {
@@ -46,8 +50,12 @@ func main() {
 		return
 	}
 
+	slices.SortFunc(certificates, func(a, b internal.Certificate) int {
+		return cmp.Compare(strings.ToLower(a.CustomName), strings.ToLower(b.CustomName))
+	})
+
 	fmt.Printf("Found %d outdated certificates\n", numberOfCertificates)
 	for _, v := range certificates {
-		fmt.Printf("%s\n", v.CustomName)
+		fmt.Printf("%s - %s\n", v.CustomName, v.Subject)
 	}
 }
