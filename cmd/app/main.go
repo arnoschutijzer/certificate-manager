@@ -32,11 +32,11 @@ func main() {
 
 	store := vaults.NewOnePasswordStore(cache)
 
-	nextMonth := time.Now().AddDate(0, 1, 0)
+	inTwoMonths := time.Now().AddDate(0, 2, 0)
 
 	fmt.Println("Finding certificates...")
 	before := time.Now()
-	certificates, err := store.FindCertificatesOlderThanDate(nextMonth)
+	certificates, err := store.FindCertificatesOlderThanDate(inTwoMonths)
 	fmt.Printf("Treated all certificates, took %f\n", time.Since(before).Seconds())
 
 	if err != nil {
