@@ -68,9 +68,15 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]doma
 
 	vaultItems, err := internal.Map(items, s.retrieveMaybeCachedSecret)
 
-	certificates, _ := internal.FlatMap(vaultItems, func(secret caches.Secret) ([]domain.Certificate, error) {
-		return internal.Map(secret.Certificates, func(certificate caches.Certificate) (domain.Certificate, error) {
-			return caches.ToDomainCertificate(certificate), nil
+	certificates, _ := internal.FlatMap(vaultItems, func(secret domain.Secret) ([]domain.Certificate, error) {
+		return internal.Map(secret.Certificates, func(certificate domain.Certificate) (domain.Certificate, error) {
+			return domain.Certificate{
+				Fingerprint: certificate.Fingerprint,
+				Subject:     certificate.Subject,
+				CustomName:  certificate.CustomName,
+				NotBefore:   certificate.NotBefore,
+				NotAfter:    certificate.NotAfter,
+			}, nil
 		})
 	})
 
@@ -79,14 +85,14 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]doma
 	}), nil
 }
 
-func (s *OnePasswordStore) retrieveMaybeCachedSecret(item Item) (caches.Secret, error) {
+func (s *OnePasswordStore) retrieveMaybeCachedSecret(item Item) (domain.Secret, error) {
 	cached, err := s.cache.RetrieveSecret(item.Id)
 
 	if err != nil {
 		vaultItem, err := s.retrieveSecretAndCache(item.Id)
 
 		if err != nil {
-			return caches.Secret{}, err
+			return domain.Secret{}, err
 		}
 
 		return vaultItem, nil
@@ -96,19 +102,19 @@ func (s *OnePasswordStore) retrieveMaybeCachedSecret(item Item) (caches.Secret, 
 		return cached, nil
 	}
 
-	vaultItem, err := s.retrieveSecretAndCache(item.Id)
+	secret, err := s.retrieveSecretAndCache(item.Id)
 
 	if err != nil {
-		return caches.Secret{}, err
+		return domain.Secret{}, err
 	}
 
-	return vaultItem, nil
+	return secret, nil
 }
 
-func (s *OnePasswordStore) retrieveSecretAndCache(id string) (caches.Secret, error) {
+func (s *OnePasswordStore) retrieveSecretAndCache(id string) (domain.Secret, error) {
 	itemWithFields, err := getItemDetails(id)
 	if err != nil {
-		return caches.Secret{}, err
+		return domain.Secret{}, err
 	}
 
 	secret := mapOnePasswordToInternal(itemWithFields)
@@ -117,16 +123,16 @@ func (s *OnePasswordStore) retrieveSecretAndCache(id string) (caches.Secret, err
 	return secret, nil
 }
 
-func mapOnePasswordToInternal(item ItemWithFields) caches.Secret {
+func mapOnePasswordToInternal(item ItemWithFields) domain.Secret {
 	field, _ := item.findContentField()
 	certificates := internal.GetCertificatesFromString(field.Value, item.Title)
 
-	cacheCertificates := []caches.Certificate{}
+	cacheCertificates := []domain.Certificate{}
 	for _, certificate := range certificates {
-		cacheCertificates = append(cacheCertificates, caches.ToDbCertificate(item.Id, certificate))
+		cacheCertificates = append(cacheCertificates, certificate)
 	}
 
-	return caches.Secret{
+	return domain.Secret{
 		Id:           item.Id,
 		Title:        item.Title,
 		UpdatedAt:    item.UpdatedAt,

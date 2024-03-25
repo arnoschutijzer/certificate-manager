@@ -7,8 +7,8 @@ import (
 )
 
 type Cache interface {
-	SaveSecret(secret Secret) error
-	RetrieveSecret(id string) (Secret, error)
+	SaveSecret(secret domain.Secret) error
+	RetrieveSecret(id string) (domain.Secret, error)
 	UpdateSecret(secret Secret) error
 	Cleanup() error
 }
@@ -27,25 +27,4 @@ type Certificate struct {
 	Subject     string
 	CustomName  string
 	Fingerprint string `gorm:"primaryKey"`
-}
-
-func ToDbCertificate(id string, certificate domain.Certificate) Certificate {
-	return Certificate{
-		SecretId:    id,
-		Fingerprint: certificate.Fingerprint,
-		Subject:     certificate.Subject,
-		NotAfter:    certificate.NotAfter,
-		NotBefore:   certificate.NotBefore,
-		CustomName:  certificate.CustomName,
-	}
-}
-
-func ToDomainCertificate(certificate Certificate) domain.Certificate {
-	return domain.Certificate{
-		Fingerprint: certificate.Fingerprint,
-		Subject:     certificate.Subject,
-		NotAfter:    certificate.NotAfter,
-		NotBefore:   certificate.NotBefore,
-		CustomName:  certificate.CustomName,
-	}
 }

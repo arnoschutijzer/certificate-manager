@@ -1,6 +1,8 @@
 package caches
 
 import (
+	"github.com/algleymi/certificate-manager/internal"
+	"github.com/algleymi/certificate-manager/internal/domain"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -26,15 +28,50 @@ func NewSqliteCache() (*SqliteCache, error) {
 	}, nil
 }
 
-func (s *SqliteCache) SaveSecret(secret Secret) error {
-	result := s.db.Create(&secret)
+func (s *SqliteCache) SaveSecret(secret domain.Secret) error {
+	certificates, _ := internal.Map(secret.Certificates, func(certificate domain.Certificate) (Certificate, error) {
+		return Certificate{
+			Fingerprint: certificate.Fingerprint,
+			Subject:     certificate.Subject,
+			CustomName:  certificate.CustomName,
+			NotAfter:    certificate.NotAfter,
+			NotBefore:   certificate.NotBefore,
+		}, nil
+	})
+	dbSecret := Secret{
+		Id:           secret.Title,
+		Title:        secret.Title,
+		UpdatedAt:    secret.UpdatedAt,
+		Certificates: certificates,
+	}
+	result := s.db.Create(&dbSecret)
 	return result.Error
 }
 
-func (s *SqliteCache) RetrieveSecret(id string) (Secret, error) {
+func (s *SqliteCache) RetrieveSecret(id string) (domain.Secret, error) {
 	var secret Secret
 	result := s.db.Where(&Secret{Id: id}).Preload("Certificates").First(&secret)
-	return secret, result.Error
+
+	if result.Error != nil {
+		return domain.Secret{}, result.Error
+	}
+
+	certificates, _ := internal.Map(secret.Certificates, func(certificate Certificate) (domain.Certificate, error) {
+		return domain.Certificate{
+			Fingerprint: certificate.Fingerprint,
+			Subject:     certificate.Subject,
+			CustomName:  certificate.CustomName,
+			NotAfter:    certificate.NotAfter,
+			NotBefore:   certificate.NotBefore,
+		}, nil
+	})
+
+	return domain.Secret{
+		Id:           secret.Id,
+		Title:        secret.Title,
+		UpdatedAt:    secret.UpdatedAt,
+		Certificates: certificates,
+	}, result.Error
 }
 
 func (s *SqliteCache) UpdateSecret(secret Secret) error {
