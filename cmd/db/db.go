@@ -17,11 +17,11 @@ func main() {
 
 	certificateAsString, err := os.ReadFile("./internal/test_fixtures/RootCA.pem")
 	certificate := domain.NewCertificate(string(certificateAsString), "aName")
-	vaultItem := caches.Secret{
+	vaultItem := domain.Secret{
 		Id:           "an-id",
 		Title:        "A VaultItem",
 		UpdatedAt:    time.Now(),
-		Certificates: []caches.Certificate{caches.ToDbCertificate("an-id", certificate)},
+		Certificates: []domain.Certificate{certificate},
 	}
 
 	cache.SaveSecret(vaultItem)
