@@ -33,7 +33,7 @@ func main() {
 	fmt.Println("Finding certificates...")
 	before := time.Now()
 	certificates, err := store.FindCertificatesOlderThanDate(firstOfJune2024UTCAt1AM)
-	fmt.Printf("Found certificates, took %f\n", time.Since(before).Seconds())
+	fmt.Printf("Treated all certificates, took %f\n", time.Since(before).Seconds())
 
 	if err != nil {
 		panic(err)
@@ -42,11 +42,11 @@ func main() {
 	numberOfCertificates := len(certificates)
 
 	if numberOfCertificates == 0 {
-		fmt.Println("no outdated certificates, nice!")
+		fmt.Println("No outdated certificates, nice!")
 		return
 	}
 
-	fmt.Printf("found %d outdated certificates\n", numberOfCertificates)
+	fmt.Printf("Found %d outdated certificates\n", numberOfCertificates)
 	for _, v := range certificates {
 		fmt.Printf("%s\n", v.CustomName)
 	}
