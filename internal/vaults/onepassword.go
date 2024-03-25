@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -66,37 +65,10 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 		return nil, err
 	}
 
-	predicate := func(item Item) (caches.VaultItem, error) {
-		cached, err := s.cache.RetrieveVaultItem(item.Id)
+	vaultItems, err := internal.Map(items, s.retrieveMaybeCachedVaultItem)
 
-		if err != nil {
-			vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
-
-			if err != nil {
-				return caches.VaultItem{}, err
-			}
-
-			return vaultItem, nil
-		}
-
-		if !item.UpdatedAt.After(cached.UpdatedAt) {
-			fmt.Println("returning cached")
-			return cached, nil
-		}
-
-		vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
-
-		if err != nil {
-			return caches.VaultItem{}, err
-		}
-
-		return vaultItem, nil
-	}
-
-	vaultItems, err := internal.Map(items, predicate)
-
-	certificates, _ := internal.FlatMap(vaultItems, func(vaultItem caches.VaultItem) ([]internal.Certificate, error) {
-		return internal.Map(vaultItem.Certificates, func(certificate caches.Certificate) (internal.Certificate, error) {
+	certificates, _ := internal.FlatMap(vaultItems, func(vaultItem caches.CachedItem) ([]internal.Certificate, error) {
+		return internal.Map(vaultItem.Certificates, func(certificate caches.CachedCertificate) (internal.Certificate, error) {
 			return caches.ToDomainCertificate(certificate), nil
 		})
 	})
@@ -104,14 +76,38 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 	return internal.Filter(certificates, func(certificate internal.Certificate) bool {
 		return !certificate.IsValid(date)
 	}), nil
-
-	return certificates, nil
 }
 
-func (s *OnePasswordStore) retrieveVaultItemAndCache(id string) (caches.VaultItem, error) {
+func (s *OnePasswordStore) retrieveMaybeCachedVaultItem(item Item) (caches.CachedItem, error) {
+	cached, err := s.cache.RetrieveVaultItem(item.Id)
+
+	if err != nil {
+		vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
+
+		if err != nil {
+			return caches.CachedItem{}, err
+		}
+
+		return vaultItem, nil
+	}
+
+	if !item.UpdatedAt.After(cached.UpdatedAt) {
+		return cached, nil
+	}
+
+	vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
+
+	if err != nil {
+		return caches.CachedItem{}, err
+	}
+
+	return vaultItem, nil
+}
+
+func (s *OnePasswordStore) retrieveVaultItemAndCache(id string) (caches.CachedItem, error) {
 	itemWithFields, err := getItemDetails(id)
 	if err != nil {
-		return caches.VaultItem{}, err
+		return caches.CachedItem{}, err
 	}
 
 	vaultItem := mapOnePasswordToInternal(itemWithFields)
@@ -120,16 +116,16 @@ func (s *OnePasswordStore) retrieveVaultItemAndCache(id string) (caches.VaultIte
 	return vaultItem, nil
 }
 
-func mapOnePasswordToInternal(item ItemWithFields) caches.VaultItem {
+func mapOnePasswordToInternal(item ItemWithFields) caches.CachedItem {
 	field, _ := item.findContentField()
 	certificates := internal.GetCertificatesFromString(field.Value, item.Title)
 
-	cacheCertificates := []caches.Certificate{}
+	cacheCertificates := []caches.CachedCertificate{}
 	for _, certificate := range certificates {
 		cacheCertificates = append(cacheCertificates, caches.ToDbCertificate(item.Id, certificate))
 	}
 
-	return caches.VaultItem{
+	return caches.CachedItem{
 		VaultId:      item.Id,
 		Title:        item.Title,
 		UpdatedAt:    item.UpdatedAt,

@@ -14,8 +14,8 @@ var _ Cache = &SqliteCache{}
 func NewSqliteCache() (*SqliteCache, error) {
 	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 
-	db.AutoMigrate(&VaultItem{})
-	db.AutoMigrate(&Certificate{})
+	db.AutoMigrate(&CachedItem{})
+	db.AutoMigrate(&CachedCertificate{})
 
 	if err != nil {
 		return nil, err
@@ -26,18 +26,18 @@ func NewSqliteCache() (*SqliteCache, error) {
 	}, nil
 }
 
-func (s *SqliteCache) SaveVaultItem(vaultItem VaultItem) error {
+func (s *SqliteCache) SaveVaultItem(vaultItem CachedItem) error {
 	result := s.db.Create(&vaultItem)
 	return result.Error
 }
 
-func (s *SqliteCache) RetrieveVaultItem(id string) (VaultItem, error) {
-	var vaultItem VaultItem
-	result := s.db.Where(&VaultItem{VaultId: id}).Preload("Certificates").First(&vaultItem)
+func (s *SqliteCache) RetrieveVaultItem(id string) (CachedItem, error) {
+	var vaultItem CachedItem
+	result := s.db.Where(&CachedItem{VaultId: id}).Preload("Certificates").First(&vaultItem)
 	return vaultItem, result.Error
 }
 
-func (s *SqliteCache) UpdateVaultItem(vaultItem VaultItem) error {
+func (s *SqliteCache) UpdateVaultItem(vaultItem CachedItem) error {
 	result := s.db.Save(&vaultItem)
 	return result.Error
 }
