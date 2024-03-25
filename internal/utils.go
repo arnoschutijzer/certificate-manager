@@ -24,14 +24,15 @@ func Map[A any, B any](array []A, predicate func(A) (B, error)) ([]B, error) {
 }
 
 func FlatMap[A any, B any](array []A, predicate func(A) ([]B, error)) ([]B, error) {
-	mapped := []B{}
-	for _, v := range array {
-		mappedValue, err := predicate(v)
-		if err != nil {
-			return nil, err
-		}
-		mapped = append(mapped, mappedValue...)
+	mapped, err := Map(array, predicate)
+	if err != nil {
+		return nil, err
 	}
 
-	return mapped, nil
+	flatmapped := []B{}
+	for _, v := range mapped {
+		flatmapped = append(flatmapped, v...)
+	}
+
+	return flatmapped, nil
 }
