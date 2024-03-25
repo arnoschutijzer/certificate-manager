@@ -35,7 +35,3 @@ func GetCertificatesFromString(secret string, vaultName string) []domain.Certifi
 
 	return certificates
 }
-
-func DoesSecretContainAnyCertificate(certificate string) bool {
-	return strings.Index(certificate, START_CERTIFICATE_TEMPLATE) > -1
-}
