@@ -65,10 +65,10 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 		return nil, err
 	}
 
-	vaultItems, err := internal.Map(items, s.retrieveMaybeCachedVaultItem)
+	vaultItems, err := internal.Map(items, s.retrieveMaybeCachedSecret)
 
-	certificates, _ := internal.FlatMap(vaultItems, func(vaultItem caches.Secret) ([]internal.Certificate, error) {
-		return internal.Map(vaultItem.Certificates, func(certificate caches.Certificate) (internal.Certificate, error) {
+	certificates, _ := internal.FlatMap(vaultItems, func(secret caches.Secret) ([]internal.Certificate, error) {
+		return internal.Map(secret.Certificates, func(certificate caches.Certificate) (internal.Certificate, error) {
 			return caches.ToDomainCertificate(certificate), nil
 		})
 	})
@@ -78,11 +78,11 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]inte
 	}), nil
 }
 
-func (s *OnePasswordStore) retrieveMaybeCachedVaultItem(item Item) (caches.Secret, error) {
-	cached, err := s.cache.RetrieveVaultItem(item.Id)
+func (s *OnePasswordStore) retrieveMaybeCachedSecret(item Item) (caches.Secret, error) {
+	cached, err := s.cache.RetrieveSecret(item.Id)
 
 	if err != nil {
-		vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
+		vaultItem, err := s.retrieveSecretAndCache(item.Id)
 
 		if err != nil {
 			return caches.Secret{}, err
@@ -95,7 +95,7 @@ func (s *OnePasswordStore) retrieveMaybeCachedVaultItem(item Item) (caches.Secre
 		return cached, nil
 	}
 
-	vaultItem, err := s.retrieveVaultItemAndCache(item.Id)
+	vaultItem, err := s.retrieveSecretAndCache(item.Id)
 
 	if err != nil {
 		return caches.Secret{}, err
@@ -104,16 +104,16 @@ func (s *OnePasswordStore) retrieveMaybeCachedVaultItem(item Item) (caches.Secre
 	return vaultItem, nil
 }
 
-func (s *OnePasswordStore) retrieveVaultItemAndCache(id string) (caches.Secret, error) {
+func (s *OnePasswordStore) retrieveSecretAndCache(id string) (caches.Secret, error) {
 	itemWithFields, err := getItemDetails(id)
 	if err != nil {
 		return caches.Secret{}, err
 	}
 
-	vaultItem := mapOnePasswordToInternal(itemWithFields)
-	s.cache.SaveVaultItem(vaultItem)
+	secret := mapOnePasswordToInternal(itemWithFields)
+	s.cache.SaveSecret(secret)
 
-	return vaultItem, nil
+	return secret, nil
 }
 
 func mapOnePasswordToInternal(item ItemWithFields) caches.Secret {

@@ -26,19 +26,19 @@ func NewSqliteCache() (*SqliteCache, error) {
 	}, nil
 }
 
-func (s *SqliteCache) SaveVaultItem(vaultItem Secret) error {
-	result := s.db.Create(&vaultItem)
+func (s *SqliteCache) SaveSecret(secret Secret) error {
+	result := s.db.Create(&secret)
 	return result.Error
 }
 
-func (s *SqliteCache) RetrieveVaultItem(id string) (Secret, error) {
-	var vaultItem Secret
-	result := s.db.Where(&Secret{Id: id}).Preload("Certificates").First(&vaultItem)
-	return vaultItem, result.Error
+func (s *SqliteCache) RetrieveSecret(id string) (Secret, error) {
+	var secret Secret
+	result := s.db.Where(&Secret{Id: id}).Preload("Certificates").First(&secret)
+	return secret, result.Error
 }
 
-func (s *SqliteCache) UpdateVaultItem(vaultItem Secret) error {
-	result := s.db.Save(&vaultItem)
+func (s *SqliteCache) UpdateSecret(secret Secret) error {
+	result := s.db.Save(&secret)
 	return result.Error
 }
 

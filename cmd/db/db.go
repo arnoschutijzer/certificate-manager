@@ -24,7 +24,7 @@ func main() {
 		Certificates: []caches.Certificate{caches.ToDbCertificate("an-id", certificate)},
 	}
 
-	cache.SaveVaultItem(vaultItem)
+	cache.SaveSecret(vaultItem)
 
 	defer cache.Cleanup()
 }
