@@ -54,21 +54,21 @@ func GetCertificatesFromString(secret string, vaultName string) []Certificate {
 	// copy-pasted to Intellij. These are saved with \n directly in the string.
 	secret = strings.ReplaceAll(secret, "\\n", "\n")
 
-	certificates := []Certificate{}
+	certificates := make([]Certificate, 0)
 	remainingSubstrings := secret
 
 	for true {
-		indexOfBegin := strings.Index(remainingSubstrings, certificateStartTemplate)
-		indexOfEnd := strings.Index(remainingSubstrings, certificateEndTemplate)
-
-		if indexOfBegin == -1 {
+		beginIndex := strings.Index(remainingSubstrings, certificateStartTemplate)
+		if beginIndex == -1 {
 			return certificates
 		}
 
-		certificate := remainingSubstrings[indexOfBegin : indexOfEnd+len(certificateEndTemplate)]
+		endIndex := strings.Index(remainingSubstrings, certificateEndTemplate)
+
+		certificate := remainingSubstrings[beginIndex : endIndex+len(certificateEndTemplate)]
 
 		certificates = append(certificates, NewCertificate(certificate, vaultName))
-		remainingSubstrings = remainingSubstrings[indexOfEnd+len(certificateEndTemplate):]
+		remainingSubstrings = remainingSubstrings[endIndex+len(certificateEndTemplate):]
 	}
 
 	return certificates
