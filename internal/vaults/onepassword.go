@@ -80,9 +80,26 @@ func (s *OnePasswordStore) FindCertificatesOlderThanDate(date time.Time) ([]doma
 		})
 	})
 
-	return internal.Filter(certificates, func(certificate domain.Certificate) bool {
+	invalidCertificates := internal.Filter(certificates, func(certificate domain.Certificate) bool {
 		return !certificate.IsValid(date)
-	}), nil
+	})
+
+	return deduplicate(invalidCertificates), nil
+}
+
+func deduplicate(certificates []domain.Certificate) []domain.Certificate {
+	m := make(map[string]domain.Certificate)
+
+	for _, v := range certificates {
+		m[v.Fingerprint] = v
+	}
+
+	uniq := []domain.Certificate{}
+	for _, v := range m {
+		uniq = append(uniq, v)
+	}
+
+	return uniq
 }
 
 func (s *OnePasswordStore) retrieveMaybeCachedSecret(item Item) (domain.Secret, error) {
