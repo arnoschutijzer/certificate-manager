@@ -15,7 +15,8 @@ func main() {
 		panic(err)
 	}
 
-	certificateAsString, err := os.ReadFile("./internal/test_fixtures/RootCA.pem")
+	certificateAsString, _ := os.ReadFile("../../internal/domain/test_fixtures/RootCA.pem")
+
 	certificate := domain.NewCertificate(string(certificateAsString), "aName")
 	secret := domain.Secret{
 		Id:           "an-id",
