@@ -39,7 +39,7 @@ func (s *SqliteCache) SaveSecret(secret domain.Secret) error {
 		}, nil
 	})
 	dbSecret := Secret{
-		Id:           secret.Title,
+		Id:           secret.Id,
 		Title:        secret.Title,
 		UpdatedAt:    secret.UpdatedAt,
 		Certificates: certificates,
