@@ -1,61 +1,34 @@
 package main
 
-import (
-	"cmp"
-	"fmt"
-	"os"
-	"os/signal"
-	"slices"
-	"strings"
-	"syscall"
-	"time"
-
-	"github.com/algleymi/certificate-manager/internal/caches"
-	"github.com/algleymi/certificate-manager/internal/domain"
-	vaults "github.com/algleymi/certificate-manager/internal/vaults"
-)
+import "github.com/algleymi/certificate-manager/internal/onepassword"
 
 func main() {
-	cache, err := caches.NewSqliteCache()
+	o, err := onepassword.NewOnePassword()
 
 	if err != nil {
 		panic(err)
 	}
 
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sigc
+	o.FindCertificates()
 
-		cache.Cleanup()
-	}()
+	// inTwoMonths := time.Now().AddDate(0, 2, 0)
+	// before := time.Now()
+	// certificates, err := onepassword.FindCertificatesOlderThanDate(inTwoMonths)
+	// fmt.Printf("Treated all certificates, took %f\n", time.Since(before).Seconds())
 
-	store := vaults.NewOnePasswordStore(cache)
+	// numberOfCertificates := len(certificates)
 
-	inTwoMonths := time.Now().AddDate(0, 2, 0)
+	// if numberOfCertificates == 0 {
+	// 	fmt.Println("No outdated certificates, nice!")
+	// 	return
+	// }
 
-	fmt.Println("Finding certificates...")
-	before := time.Now()
-	certificates, err := store.FindCertificatesOlderThanDate(inTwoMonths)
-	fmt.Printf("Treated all certificates, took %f\n", time.Since(before).Seconds())
+	// slices.SortFunc(certificates, func(a, b domain.Certificate) int {
+	// 	return cmp.Compare(strings.ToLower(a.CustomName), strings.ToLower(b.CustomName))
+	// })
 
-	if err != nil {
-		panic(err)
-	}
-
-	numberOfCertificates := len(certificates)
-
-	if numberOfCertificates == 0 {
-		fmt.Println("No outdated certificates, nice!")
-		return
-	}
-
-	slices.SortFunc(certificates, func(a, b domain.Certificate) int {
-		return cmp.Compare(strings.ToLower(a.CustomName), strings.ToLower(b.CustomName))
-	})
-
-	fmt.Printf("Found %d outdated certificates\n", numberOfCertificates)
-	for _, v := range certificates {
-		fmt.Printf("%s - %s\n", v.CustomName, v.Subject)
-	}
+	// fmt.Printf("Found %d outdated certificates\n", numberOfCertificates)
+	// for _, v := range certificates {
+	// 	fmt.Printf("%s - %s\n", v.CustomName, v.Subject)
+	// }
 }
