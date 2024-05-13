@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-	"time"
 )
 
 const (
@@ -17,9 +16,8 @@ const (
 )
 
 type Item struct {
-	Id        string    `json:"id"`
-	Title     string    `json:"title"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id    string `json:"id"`
+	Title string `json:"title"`
 }
 
 type ItemWithFields struct {
