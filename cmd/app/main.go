@@ -16,7 +16,7 @@ func main() {
 
 	inAMonth := time.Now().AddDate(0, 1, 0)
 
-	outdatedCertificates, err := o.FindCertificates(inAMonth)
+	outdatedCertificates, err := o.FindCertificatesOlder(inAMonth)
 
 	if err != nil {
 		panic(err)

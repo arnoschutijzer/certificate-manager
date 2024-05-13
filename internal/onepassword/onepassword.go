@@ -8,6 +8,8 @@ import (
 	"github.com/algleymi/certificate-manager/internal"
 )
 
+var _ internal.Vault = &OnePassword{}
+
 type OnePassword struct {
 }
 
@@ -22,10 +24,10 @@ type fetchResult struct {
 
 var ErrNoCertificatesFound = errors.New("no certificates found")
 
-func (o *OnePassword) FindCertificates(after time.Time) ([]internal.Certificate, error) {
+func (o *OnePassword) FindCertificatesOlder(after time.Time) ([]internal.Certificate, error) {
 	itemsWithFields, err := o.retrieveItemsWithFields()
 
-	certificates, err := fetchCertificatesFromItemsWithFields(itemsWithFields)
+	certificates, err := retrieveCertificatesFromItemsWithFields(itemsWithFields)
 
 	if err != nil {
 		return nil, err
@@ -38,7 +40,7 @@ func (o *OnePassword) FindCertificates(after time.Time) ([]internal.Certificate,
 	return olderCertificates, nil
 }
 
-func fetchCertificatesFromItemsWithFields(itemsWithFields []ItemWithFields) ([]internal.Certificate, error) {
+func retrieveCertificatesFromItemsWithFields(itemsWithFields []ItemWithFields) ([]internal.Certificate, error) {
 	return internal.FlatMap(itemsWithFields, func(itemWithFields ItemWithFields) ([]internal.Certificate, error) {
 		content, err := itemWithFields.findContentField()
 		if err != nil {
@@ -70,7 +72,7 @@ func (o *OnePassword) retrieveItemsWithFields() ([]ItemWithFields, error) {
 		go func(item Item, results chan<- fetchResult) {
 			defer wg.Done()
 
-			itemWithFields, err := o.retrieveItemAndCache(item)
+			itemWithFields, err := o.retrieveItem(item)
 
 			result := fetchResult{
 				itemWithFields: itemWithFields,
@@ -97,7 +99,7 @@ func (o *OnePassword) retrieveItemsWithFields() ([]ItemWithFields, error) {
 	return itemsWithFields, errors.Join(errorsForFields...)
 }
 
-func (o *OnePassword) retrieveItemAndCache(item Item) (ItemWithFields, error) {
+func (o *OnePassword) retrieveItem(item Item) (ItemWithFields, error) {
 
 	itemWithFields, err := getItemDetails(item.Id)
 	if err != nil {
