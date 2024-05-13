@@ -1,8 +1,11 @@
 package onepassword
 
 import (
-	"fmt"
+	"errors"
 	"sync"
+	"time"
+
+	"github.com/algleymi/certificate-manager/internal"
 )
 
 type OnePassword struct {
@@ -17,11 +20,40 @@ type fetchResult struct {
 	potentialError error
 }
 
-func (o *OnePassword) FindCertificates() error {
+var ErrNoCertificatesFound = errors.New("no certificates found")
+
+func (o *OnePassword) FindCertificates(after time.Time) ([]internal.Certificate, error) {
+	itemsWithFields, err := o.retrieveItemsWithFields()
+
+	certificates, err := fetchCertificatesFromItemsWithFields(itemsWithFields)
+
+	if err != nil {
+		return nil, err
+	}
+
+	olderCertificates := internal.Filter(certificates, func(certificate internal.Certificate) bool {
+		return !certificate.IsValid(after)
+	})
+
+	return olderCertificates, nil
+}
+
+func fetchCertificatesFromItemsWithFields(itemsWithFields []ItemWithFields) ([]internal.Certificate, error) {
+	return internal.FlatMap(itemsWithFields, func(itemWithFields ItemWithFields) ([]internal.Certificate, error) {
+		content, err := itemWithFields.findContentField()
+		if err != nil {
+			return nil, err
+		}
+		certificates := internal.GetCertificatesFromString(content.Value, itemWithFields.Title)
+		return certificates, nil
+	})
+}
+
+func (o *OnePassword) retrieveItemsWithFields() ([]ItemWithFields, error) {
 	items, err := getListOfItems()
 
 	if err != nil {
-		return err
+		return nil, nil
 	}
 
 	results := make(chan fetchResult)
@@ -50,15 +82,19 @@ func (o *OnePassword) FindCertificates() error {
 		}(v, results)
 	}
 
+	itemsWithFields := []ItemWithFields{}
+	errorsForFields := []error{}
+
 	for result := range results {
 		if result.potentialError != nil {
-			fmt.Println("Error:", result.potentialError)
+			errorsForFields = append(errorsForFields, result.potentialError)
 			continue
 		}
-		fmt.Println(result.itemWithFields.Title)
+
+		itemsWithFields = append(itemsWithFields, result.itemWithFields)
 	}
 
-	return nil
+	return itemsWithFields, errors.Join(errorsForFields...)
 }
 
 func (o *OnePassword) retrieveItemAndCache(item Item) (ItemWithFields, error) {

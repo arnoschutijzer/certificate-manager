@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -47,8 +46,6 @@ type Field struct {
 func execute[T any](cmd *exec.Cmd) (*T, error) {
 	var out bytes.Buffer
 	cmd.Stdout = &out
-
-	fmt.Println(cmd.String())
 
 	if err := cmd.Run(); err != nil {
 		return nil, err
