@@ -6,19 +6,10 @@ import (
 )
 
 type OnePassword struct {
-	cache *SqliteCache
 }
 
 func NewOnePassword() (*OnePassword, error) {
-	cache, err := NewSqliteCache()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &OnePassword{
-		cache,
-	}, nil
+	return &OnePassword{}, nil
 }
 
 type fetchResult struct {
@@ -71,38 +62,11 @@ func (o *OnePassword) FindCertificates() error {
 }
 
 func (o *OnePassword) retrieveItemAndCache(item Item) (ItemWithFields, error) {
-	cached, err := o.cache.RetrieveItem(item.Id)
 
-	if err != nil {
-		itemWithFields, err := o.retrieveSecretAndCache(item.Id)
-
-		if err != nil {
-			return ItemWithFields{}, err
-		}
-
-		return itemWithFields, nil
-	}
-
-	if !item.UpdatedAt.After(cached.UpdatedAt) {
-		return cached, nil
-	}
-
-	itemWithFields, err := o.retrieveSecretAndCache(item.Id)
-
+	itemWithFields, err := getItemDetails(item.Id)
 	if err != nil {
 		return ItemWithFields{}, err
 	}
-
-	return itemWithFields, nil
-}
-
-func (s *OnePassword) retrieveSecretAndCache(id string) (ItemWithFields, error) {
-	itemWithFields, err := getItemDetails(id)
-	if err != nil {
-		return ItemWithFields{}, err
-	}
-
-	s.cache.SaveItem(itemWithFields)
 
 	return itemWithFields, nil
 }
