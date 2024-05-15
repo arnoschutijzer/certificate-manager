@@ -92,3 +92,16 @@ func TestMapsStructsWithErrors(t *testing.T) {
 	_, err := Map(foos, predicate)
 	assert.True(t, errors.Is(err, errSomeKindOfError))
 }
+
+func TestFlattens(t *testing.T) {
+	type Foo struct {
+		ANumber int
+	}
+	foos := [][]Foo{
+		{{ANumber: 0}, {ANumber: 1}},
+		{{ANumber: 2}, {ANumber: 3}},
+		{{ANumber: 4}, {ANumber: 5}},
+	}
+	flatFoos := Flatten(foos)
+	assert.Len(t, flatFoos, 6)
+}

@@ -29,10 +29,13 @@ func FlatMap[A any, B any](array []A, predicate func(A) ([]B, error)) ([]B, erro
 		return nil, err
 	}
 
-	flatmapped := []B{}
-	for _, v := range mapped {
+	return Flatten(mapped), nil
+}
+
+func Flatten[A any](array [][]A) []A {
+	flatmapped := []A{}
+	for _, v := range array {
 		flatmapped = append(flatmapped, v...)
 	}
-
-	return flatmapped, nil
+	return flatmapped
 }
