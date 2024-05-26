@@ -23,5 +23,9 @@ func main() {
 	}
 
 	exporter := &exporters.ConsoleExporter{}
-	exporter.Export(outdatedCertificates)
+	err = exporter.Export(outdatedCertificates)
+
+	if err != nil {
+		panic(err)
+	}
 }
