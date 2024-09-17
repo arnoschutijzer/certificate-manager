@@ -27,6 +27,10 @@ var ErrNoCertificatesFound = errors.New("no certificates found")
 func (o *OnePassword) FindCertificatesOlder(after time.Time) ([]internal.Certificate, error) {
 	itemsWithFields, err := o.retrieveItemsWithFields()
 
+	if err != nil {
+		return nil, err
+	}
+
 	certificates, err := retrieveCertificatesFromItemsWithFields(itemsWithFields)
 
 	if err != nil {
